@@ -1,0 +1,72 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+项目结构规范
+
+复制
+项目采用前后端分离架构：
+├── backend/    # SpringBoot3后端项目
+└── front/      # Vue3前端项目
+前端开发规则
+
+技术栈要求：
+ 强制使用：Vue3 + TypeScript + Vite + Vue-Router4 + Pinia + ElementPlus
+ CSS预处理：推荐Sass/SCSS
+ 代码规范：ESLint + Prettier + Airbnb规范
+
+组件规范：
+
+使用Composition API + <script setup>语法
+
+类型定义必须使用TypeScript
+
+组件目录：src/components/下按功能模块划分
+
+状态管理：
+必须使用Pinia
+类型化的store定义
+禁止直接修改store外的状态
+
+后端开发规则
+
+技术栈要求：
+强制使用：SpringBoot3 + Java21
+构建工具：Maven/Gradle选其一
+数据库：推荐JPA + QueryDSL
+
+编码禁令：
+ 禁止使用Lombok
+ 禁止字段注入@Autowired
+ 替代方案：构造器注入/Setter注入
+
+API规范：
+ RESTful设计规范
+ 必须使用DTO模式
+ 全局异常处理
+ 必须配置CORS
+
+质量保障
+
+前端：
+ 单元测试：Vitest
+ E2E测试：Cypress
+
+后端：
+ 单元测试：JUnit5 + Mockito
+ 集成测试：Testcontainers
+
+扩展规则
+
+允许扩展的场景：
+
+前端可视化：ECharts
+
+后端安全：Spring Security 6+
+
+文档：Swagger/OpenAPI3
+
+禁止扩展的场景：
+ 前端不得引入Vue2技术栈
+ 后端不得使用Java8/11遗留特性

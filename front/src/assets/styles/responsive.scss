@@ -1,0 +1,199 @@
+@use "sass:map";
+@use "sass:string";
+@use './config' as *;
+
+// 断点定义
+$breakpoints: (
+  'xs': 0,
+  'sm': 576px,
+  'md': 768px,
+  'lg': 992px,
+  'xl': 1200px,
+  'xxl': 1400px
+);
+
+// 响应式混入
+@mixin respond-to($breakpoint) {
+  @if map.has-key($breakpoints, $breakpoint) {
+    @media (max-width: map.get($breakpoints, $breakpoint)) {
+      @content;
+    }
+  } @else {
+    @warn "未知的断点: #{$breakpoint}";
+  }
+}
+
+// 容器最大宽度
+$container-max-widths: (
+  'sm': 540px,
+  'md': 720px,
+  'lg': 960px,
+  'xl': 1140px,
+  'xxl': 1320px
+);
+
+// 网格系统配置
+$grid-columns: 12;
+$grid-gutter-width: 24px;
+
+// 生成响应式容器类
+@mixin make-container {
+  width: 100%;
+  margin-right: auto;
+  margin-left: auto;
+  padding-right: $grid-gutter-width * 0.5;
+  padding-left: $grid-gutter-width * 0.5;
+}
+
+// 生成响应式容器最大宽度
+@each $breakpoint, $container-max-width in $container-max-widths {
+  .container-#{$breakpoint} {
+    @include make-container;
+    
+    @media (min-width: map.get($breakpoints, $breakpoint)) {
+      max-width: $container-max-width;
+    }
+  }
+}
+
+// 生成响应式工具类
+@each $breakpoint in map.keys($breakpoints) {
+  @include respond-to($breakpoint) {
+    .d-#{$breakpoint}-none {
+      display: none !important;
+    }
+    
+    .d-#{$breakpoint}-block {
+      display: block !important;
+    }
+    
+    .d-#{$breakpoint}-flex {
+      display: flex !important;
+    }
+  }
+}
+
+// 响应式字体大小
+$font-sizes: (
+  'base': 16px,
+  'sm': 14px,
+  'md': 15px,
+  'lg': 16px,
+  'xl': 18px
+);
+
+@each $breakpoint, $font-size in $font-sizes {
+  @if $breakpoint != 'base' {
+    @include respond-to($breakpoint) {
+      html {
+        font-size: $font-size;
+      }
+    }
+  }
+}
+
+// 响应式间距
+$spacers: (
+  0: 0,
+  1: 0.25rem,
+  2: 0.5rem,
+  3: 1rem,
+  4: 1.5rem,
+  5: 3rem
+);
+
+@each $breakpoint in map.keys($breakpoints) {
+  @include respond-to($breakpoint) {
+    @each $prop in (margin, padding) {
+      @each $size, $value in $spacers {
+        .#{string.slice($prop, 1, 1)}-#{$breakpoint}-#{$size} {
+          #{$prop}: $value !important;
+        }
+        
+        .#{string.slice($prop, 1, 1)}t-#{$breakpoint}-#{$size} {
+          #{$prop}-top: $value !important;
+        }
+        
+        .#{string.slice($prop, 1, 1)}r-#{$breakpoint}-#{$size} {
+          #{$prop}-right: $value !important;
+        }
+        
+        .#{string.slice($prop, 1, 1)}b-#{$breakpoint}-#{$size} {
+          #{$prop}-bottom: $value !important;
+        }
+        
+        .#{string.slice($prop, 1, 1)}l-#{$breakpoint}-#{$size} {
+          #{$prop}-left: $value !important;
+        }
+        
+        .#{string.slice($prop, 1, 1)}x-#{$breakpoint}-#{$size} {
+          #{$prop}-right: $value !important;
+          #{$prop}-left: $value !important;
+        }
+        
+        .#{string.slice($prop, 1, 1)}y-#{$breakpoint}-#{$size} {
+          #{$prop}-top: $value !important;
+          #{$prop}-bottom: $value !important;
+        }
+      }
+    }
+  }
+}
+
+// 常用响应式工具类
+.responsive-container {
+  max-width: 100%;
+  padding: 0 16px;
+  margin: 0 auto;
+  
+  @include respond-to('lg') {
+    padding: 0 24px;
+  }
+  
+  @include respond-to('md') {
+    padding: 0 16px;
+  }
+}
+
+// 响应式网格系统
+.responsive-grid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  
+  @include respond-to('md') {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px;
+  }
+  
+  @include respond-to('sm') {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+// 响应式文本样式
+.responsive-text {
+  font-size: 1rem;
+  
+  @include respond-to('md') {
+    font-size: 0.95rem;
+  }
+  
+  @include respond-to('sm') {
+    font-size: 0.9rem;
+  }
+}
+
+// 响应式标题样式
+.responsive-title {
+  font-size: 1.75rem;
+  
+  @include respond-to('md') {
+    font-size: 1.5rem;
+  }
+  
+  @include respond-to('sm') {
+    font-size: 1.25rem;
+  }
+} 

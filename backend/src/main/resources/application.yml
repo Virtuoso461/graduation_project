@@ -1,0 +1,85 @@
+spring:
+  application:
+    name: backend
+  main:
+    allow-bean-definition-overriding: true
+  datasource:
+    url: jdbc:mysql://localhost:3306/graduation_project?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: 13579
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+  mail:
+    host: smtp.163.com
+    port: 465
+    username: 13666051426@163.com # 请替换为实际的163邮箱账号
+    password: FAkhefmNNXcQxyRP # 授权密码
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.ssl.enable: true
+  # 文件上传配置
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 5MB
+      max-request-size: 10MB
+  # Redis配置
+  redis:
+    host: localhost
+    port: 6379
+    database: 0
+    password: # 如有密码，请设置
+  # Security配置
+  security:
+    # 禁用默认的安全配置
+    basic:
+      enabled: false
+    # 禁用CSRF保护
+    csrf:
+      enabled: false
+
+# 自定义配置
+custom:
+  # ... existing code ...
+
+# 智谱AI配置
+zhipu:
+  ai:
+    api-key: ${ZHIPU_API_KEY:your_api_key_here}
+    api-secret: ${ZHIPU_API_SECRET:your_api_secret_here}
+    api-url: https://open.bigmodel.cn/api/paas/v4/chat/completions
+zhipuai:
+  api-key: "zhipu-123abcdef.abcdef123456789xyz" # 替换为你的智谱AI API密钥
+  model-id: "glm-4-flash" # 模型ID
+  base-url: "https://open.bigmodel.cn/api/paas/v4" # API基础URL
+  timeout: 60 # 超时时间（秒）
+
+# LM Studio模型API配置
+lmstudio:
+  base-url: http://192.168.31.165:1234
+  model-id: text-embedding-nomic-embed-text-v1.5
+  timeout: 60000
+
+jwt:
+  secret: your-secret-key
+  # token有效期（单位：秒）
+  expiration: 86400000 # 24小时的毫秒数
+  # token刷新时间（单位：秒）
+  refresh-expiration: 86400
+  
+# 文件上传路径配置
+file:
+  upload:
+    # 头像存储的相对路径（相对于前端项目的public目录）
+    avatar-dir: images/avatars
+    # 头像访问的基础URL路径
+    avatar-base-url: /images/avatars
+    # 前端项目路径（用于保存文件到前端项目）
+    frontend-path: E:/Java/JavaSource/graduation_project/front/public
+
+server:
+  port: 8080

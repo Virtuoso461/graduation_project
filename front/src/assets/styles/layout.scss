@@ -1,0 +1,138 @@
+/* 布局相关样式 */
+
+/* 主布局容器 */
+.layout-container {
+  display: flex;
+  min-height: 100vh;
+  height: 100%;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  background-color: var(--el-fill-color-light);
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* 确保主内容区域充分填充 */
+.main-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+  min-height: 100vh;
+  height: 100%;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  box-sizing: border-box;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* 内容区域样式 */
+.content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  overflow-y: auto;
+  max-width: 100%;
+  margin: 0;
+}
+
+/* 侧边栏样式 */
+.app-sidebar {
+  width: 260px;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  transition: all 0.3s;
+  overflow-y: auto;
+}
+
+/* 顶部栏样式 */
+.app-header {
+  width: 100%;
+  box-sizing: border-box;
+  position: sticky;
+  top: 0;
+  z-index: 999;
+}
+
+/* 页脚样式 */
+.app-footer {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 侧边栏收起时的样式 */
+.sidebar-collapsed .app-sidebar {
+  width: 64px;
+}
+
+.sidebar-collapsed .main-container {
+  margin-left: 64px;
+  width: calc(100% - 64px);
+}
+
+/* 响应式调整 */
+@media (max-width: 992px) {
+  .app-sidebar {
+    width: 64px;
+  }
+  
+  .main-container {
+    margin-left: 64px;
+    width: calc(100% - 64px);
+  }
+}
+
+@media (max-width: 768px) {
+  .main-container {
+    margin-left: 0;
+    width: 100%;
+  }
+  
+  .sidebar-collapsed .main-container {
+    margin-left: 0;
+    width: 100%;
+  }
+  
+  .app-sidebar {
+    transform: translateX(-100%);
+  }
+  
+  .app-sidebar.expanded {
+    transform: translateX(0);
+    width: 240px;
+  }
+}
+
+/* 移动端侧边栏遮罩 */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+} 
