@@ -257,17 +257,17 @@ const cancelEditing = () => {
 const fetchProfile = async () => {
   console.log('开始获取个人资料...')
   loading.value = true
-  
+
   try {
     // 尝试从IndexedDB获取用户信息
     const userId = localStorage.getItem('currentUserId')
     console.log('从IndexedDB获取用户ID:', userId)
-    
+
     if (userId) {
       try {
         const userInfo = await getCurrentUserInfo()
         console.log('从IndexedDB获取到的用户信息:', userInfo)
-        
+
         if (userInfo) {
           // 从IndexedDB获取到用户信息，更新到表单数据
           profileData.name = userInfo.name || '';
@@ -278,21 +278,21 @@ const fetchProfile = async () => {
           profileData.avatar = userInfo.avatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png';
           profileData.email = userInfo.email || '';
           profileData.username = userInfo.username || '';
-          
+
           // 更新用户统计信息
           if (userInfo.value) {
             userInfo.value.courseCount = userInfo.courseCount || 0;
             userInfo.value.studyHours = userInfo.studyHours || 0;
             userInfo.value.points = userInfo.points || 0;
           }
-          
+
           // 更新用户信息到store
           userStore.updateUserInfo({
             name: userInfo.name || '',
             avatar: userInfo.avatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png',
             role: userInfo.role || 'student'
           });
-          
+
           console.log('已从IndexedDB更新个人资料数据:', profileData);
           return; // 如果从IndexedDB获取成功，直接返回，不再调用API
         }
@@ -301,14 +301,14 @@ const fetchProfile = async () => {
         // 获取失败，继续尝试从API获取
       }
     }
-    
+
     // 如果从IndexedDB获取失败或没有数据，尝试从API获取
     console.log('从API获取个人资料数据...');
     const response = await profileApi.getProfile(userId || '');
-    
+
     if (response && typeof response === 'object' && 'data' in response && response.data) {
       const data = response.data as any;
-      
+
       // 更新表单数据
       profileData.name = data.name || '';
       profileData.gender = data.gender || '';
@@ -316,15 +316,15 @@ const fetchProfile = async () => {
       profileData.bio = data.bio || '';
       profileData.birthday = data.birthday || '';
       profileData.avatar = data.avatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png';
-      
+
       if (userInfo.value) {
         userInfo.value.courseCount = data.courseCount || 0;
         userInfo.value.studyHours = data.studyHours || 0;
         userInfo.value.points = data.points || 0;
       }
-      
+
       console.log('已从API更新个人资料数据:', profileData);
-      
+
       // 如果从API获取成功，同时更新到IndexedDB
       if (userId) {
         const userInfoFromDB = await getCurrentUserInfo();
@@ -341,7 +341,7 @@ const fetchProfile = async () => {
           };
           await saveUserInfo(updatedUserInfo);
           console.log('已将API获取的个人资料同步到IndexedDB');
-          
+
           // 更新用户信息到store
           userStore.updateUserInfo({
             name: updatedUserInfo.name || '',
@@ -364,7 +364,7 @@ const fetchProfile = async () => {
   } catch (error: any) {
     console.error('获取个人资料失败:', error);
     ElMessage.error(error?.message || '获取个人资料失败');
-    
+
     // 发生错误时，使用默认值
     profileData.name = '';
     profileData.gender = '';
@@ -383,15 +383,15 @@ const handleAvatarSuccess = (response: ApiResponse<{url: string}>) => {
   if (response.code === 200 && response.data) {
     // 更新表单数据中的头像地址
     profileData.avatar = response.data.url;
-    
+
     // 同时更新到user store，确保界面立即刷新
     userStore.updateUserInfo({
       avatar: response.data.url
     });
-    
+
     // 提示上传成功
     ElMessage.success('头像上传成功');
-    
+
     // 异步更新到IndexedDB
     try {
       const userId = localStorage.getItem('currentUserId');
@@ -432,72 +432,42 @@ const beforeAvatarUpload = (file: File) => {
 // 保存个人资料
 const handleSave = async () => {
   if (!formRef.value) return;
-  
+
   try {
     await formRef.value.validate();
     loading.value = true;
-    
+
     console.log('开始保存个人资料:', profileData);
-    
-    // 1. 保存到后端API
+
+    // 使用更新后的profileApi.updateProfile方法，它会同时保存到后端和IndexedDB
     try {
+      console.log('开始保存个人资料到后端和IndexedDB:', profileData);
       const response = await profileApi.updateProfile(profileData);
-      console.log('个人资料API保存结果:', response);
-      
+      console.log('个人资料保存结果:', response);
+
       if (!response || (typeof response === 'object' && 'code' in response && response.code !== 200)) {
         const errorMsg = response && typeof response === 'object' && 'message' in response ? response.message : '保存失败';
         throw new Error(errorMsg as string);
       }
-    } catch (apiError: any) {
-      console.error('保存到API失败:', apiError);
-      ElMessage.error(apiError.message || '保存到服务器失败');
-      // 即使API保存失败，也继续尝试保存到IndexedDB
-    }
-    
-    // 2. 同步保存到IndexedDB
-    try {
-      const userId = localStorage.getItem('currentUserId');
-      
-      if (userId) {
-        // 获取现有的用户信息
-        const existingUserInfo = await getCurrentUserInfo();
-        
-        if (existingUserInfo) {
-          // 更新现有数据
-          const updatedUserInfo = {
-            ...existingUserInfo,
-            name: profileData.name,
-            gender: profileData.gender,
-            phoneNumber: profileData.phoneNumber,
-            bio: profileData.bio,
-            birthday: profileData.birthday,
-            avatar: profileData.avatar
-          };
-          
-          await saveUserInfo(updatedUserInfo);
-          console.log('已保存更新后的个人资料到IndexedDB:', updatedUserInfo);
-          
-          // 更新用户信息到store
-          userStore.updateUserInfo({
-            name: updatedUserInfo.name || '',
-            avatar: updatedUserInfo.avatar
-          });
-        } else {
-          console.warn('未找到现有用户信息，无法更新IndexedDB');
-        }
-      } else {
-        console.warn('未找到当前用户ID，无法更新IndexedDB');
+
+      // 如果保存成功，更新用户信息到store
+      if (response.data) {
+        userStore.updateUserInfo({
+          name: response.data.name || '',
+          avatar: response.data.avatar
+        });
       }
-    } catch (dbError) {
-      console.error('保存到IndexedDB失败:', dbError);
-      ElMessage.warning('本地存储更新失败，下次访问可能需要重新加载数据');
+
+      ElMessage.success('个人资料保存成功');
+    } catch (error: any) {
+      console.error('保存个人资料失败:', error);
+      ElMessage.error(error.message || '保存个人资料失败');
+      return; // 如果保存失败，直接返回，不执行后续操作
     }
-    
-    ElMessage.success('个人资料保存成功');
-    
+
     // 保存当前数据到临时对象（用于取消编辑时还原）
     Object.assign(tempProfileData, profileData);
-    
+
     // 退出编辑模式
     isEditing.value = false;
   } catch (validationError: any) {
@@ -581,7 +551,7 @@ onMounted(() => {
   min-height: calc(100vh - 60px); // 减去顶部导航栏的高度
   position: relative;
   background-color: var(--el-bg-color);
-  
+
   .page-header {
     display: flex;
     justify-content: space-between;
@@ -607,7 +577,7 @@ onMounted(() => {
   .profile-container {
     position: relative;
     z-index: 0;
-    
+
     .profile-card {
       .avatar-container {
         display: flex;

@@ -4,14 +4,14 @@
     <div class="particles-container">
       <div v-for="n in 50" :key="n" class="particle" :style="getParticleStyle()"></div>
     </div>
-    
+
     <!-- 波浪效果 -->
     <div class="wave-container">
       <div class="wave wave1"></div>
       <div class="wave wave2"></div>
       <div class="wave wave3"></div>
     </div>
-    
+
     <!-- 登录卡片 -->
     <div class="login-card">
       <div class="card-header">
@@ -21,7 +21,7 @@
         </div>
         <p class="slogan">高校智能学习助手</p>
       </div>
-      
+
       <el-form
         ref="formRef"
         :model="form"
@@ -75,46 +75,46 @@
             忘记密码？
           </el-button>
         </div>
-        
-        <el-button 
-          type="primary" 
-          class="login-button" 
-          :loading="loading" 
+
+        <el-button
+          type="primary"
+          class="login-button"
+          :loading="loading"
           @click="handleLogin"
         >
           登录
         </el-button>
-        
+
         <div class="divider">
           <span>或</span>
         </div>
-        
+
         <div class="oauth-options">
           <el-tooltip content="微信登录" placement="top">
             <el-button class="oauth-button wechat">
               <el-icon><component :is="Platform.wechat" /></el-icon>
             </el-button>
           </el-tooltip>
-          
+
           <el-tooltip content="QQ登录" placement="top">
             <el-button class="oauth-button qq">
               <el-icon><component :is="Platform.qq" /></el-icon>
             </el-button>
           </el-tooltip>
-          
+
           <el-tooltip content="学校统一认证" placement="top">
             <el-button class="oauth-button school">
               <el-icon><School /></el-icon>
             </el-button>
           </el-tooltip>
         </div>
-        
+
         <div class="register-link">
           还没有账号？ <router-link to="/register">立即注册</router-link>
         </div>
       </el-form>
     </div>
-    
+
     <!-- 底部版权信息 -->
     <footer class="footer">
       <p>© {{ currentYear }} 学习矩阵 - 高校智能学习平台</p>
@@ -180,94 +180,39 @@ interface ApiResponse {
 // 处理登录
 const handleLogin = async () => {
   if (!formRef.value) return
-  
+
   try {
     await formRef.value.validate()
     loading.value = true
-    
+
     console.log('开始登录流程，提交表单数据:', form.value)
-    
+
     // 调用 userStore 的登录方法
     const success = await userStore.login({
       username: form.value.username,
       password: form.value.password
     })
-    
+
     console.log('登录结果:', success)
-    
+
     // 如果勾选了"记住我"，保存用户名
     if (success && rememberMe.value) {
       localStorage.setItem('rememberedUser', form.value.username)
     } else if (!rememberMe.value) {
       localStorage.removeItem('rememberedUser')
     }
-    
-    // 登录成功，获取用户资料并保存到IndexedDB
+
+    // 登录成功，用户资料已在userStore.login中处理
     if (success) {
-      try {
-        // 确保用户ID保存到localStorage，以便从IndexedDB获取数据
-        localStorage.setItem('currentUserId', form.value.username)
-        
-        // 创建默认用户信息
-        const defaultUserInfo = {
-          id: form.value.username, // 使用邮箱作为ID
-          username: form.value.username.split('@')[0],
-          email: form.value.username,
-          role: form.value.role,
-          name: '',
-          phoneNumber: '',
-          gender: '',
-          birthday: '',
-          bio: '',
-          avatar: 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png',
-          courseCount: 0,
-          studyHours: 0,
-          points: 0
-        }
-        
-        // 尝试获取用户资料
-        try {
-          // 获取用户资料（这可能会失败如果后端API有问题）
-          console.log('尝试从后端API获取用户个人资料数据')
-          const profileResponse = await profileApi.getProfile(form.value.username)
-          
-          // 如果成功获取到用户资料
-          if (profileResponse && typeof profileResponse === 'object' && 'data' in profileResponse) {
-            console.log('从后端API获取到用户个人资料:', profileResponse.data)
-            const profileData = profileResponse.data as any
-            
-            // 更新用户信息
-            Object.assign(defaultUserInfo, {
-              name: profileData.name || '',
-              phoneNumber: profileData.phoneNumber || '',
-              gender: profileData.gender || '',
-              birthday: profileData.birthday || '',
-              bio: profileData.bio || '',
-              avatar: profileData.avatar || defaultUserInfo.avatar,
-              courseCount: profileData.courseCount || 0,
-              studyHours: profileData.studyHours || 0,
-              points: profileData.points || 0
-            })
-          }
-        } catch (error) {
-          console.error('获取用户资料失败，将使用默认值:', error)
-          // 继续使用默认值
-        }
-        
-        // 无论后端API是否成功，都保存到IndexedDB
-        await saveUserInfo(defaultUserInfo)
-        console.log('用户资料已保存到IndexedDB:', defaultUserInfo)
-      } catch (error) {
-        console.error('保存用户资料到IndexedDB失败:', error)
-        // 这里不中断登录流程，即使保存失败也允许用户登录
-      }
-      
+      // 注意：我们已经在userStore.login中处理了用户资料的获取和保存
+      // 这里不需要重复处理
+
       // 根据用户角色决定跳转路径
       const redirectPath = route.query.redirect as string || '/dashboard'
-      
+
       console.log('用户角色:', form.value.role)
       console.log('重定向路径:', redirectPath)
-      
+
       // 如果用户手动设置了角色，就使用该角色进行跳转
       if (form.value.role === 'teacher') {
         console.log('教师角色，准备跳转到: /course-catalog')
@@ -301,7 +246,7 @@ const getParticleStyle = () => {
   const animDuration = Math.random() * 20 + 10
   const delay = Math.random() * 10
   const opacity = Math.random() * 0.6 + 0.2
-  
+
   return {
     width: `${size}px`,
     height: `${size}px`,
@@ -315,17 +260,17 @@ const getParticleStyle = () => {
 // 从URL参数中获取用户名和密码
 onMounted(() => {
   document.body.classList.add('login-page')
-  
+
   // 检查是否已登录
   if (userStore.isLoggedIn) {
     // 如果已登录，直接跳转到首页
     router.push('/')
   }
-  
+
   // 检查URL参数中是否有用户名和密码
   const username = route.query.username as string
   const password = route.query.password as string
-  
+
   if (username) {
     form.value.username = username
   } else {
@@ -336,12 +281,12 @@ onMounted(() => {
       rememberMe.value = true
     }
   }
-  
+
   if (password) {
     form.value.password = password
     // 如果有密码，自动勾选"记住我"
     rememberMe.value = true
-    
+
     // 自动聚焦到登录按钮
     setTimeout(() => {
       const loginButton = document.querySelector('.login-button')
@@ -350,7 +295,7 @@ onMounted(() => {
       }
     }, 500)
   }
-  
+
   return () => {
     document.body.classList.remove('login-page')
   }
@@ -462,7 +407,7 @@ onMounted(() => {
   padding: 40px;
   z-index: 10;
   animation: fadeIn 0.8s ease-out;
-  
+
   &::before {
     content: '';
     position: absolute;
@@ -477,13 +422,13 @@ onMounted(() => {
 .card-header {
   text-align: center;
   margin-bottom: 30px;
-  
+
   .logo-container {
     display: flex;
     align-items: center;
     justify-content: center;
     margin-bottom: 16px;
-    
+
     .logo-icon {
       width: 40px;
       height: 40px;
@@ -491,7 +436,7 @@ onMounted(() => {
       border-radius: 8px;
       position: relative;
       margin-right: 12px;
-      
+
       &::before {
         content: '';
         position: absolute;
@@ -503,7 +448,7 @@ onMounted(() => {
         left: 10px;
       }
     }
-    
+
     .logo-text {
       font-size: 1.8rem;
       font-weight: 700;
@@ -514,7 +459,7 @@ onMounted(() => {
       color: transparent;
     }
   }
-  
+
   .slogan {
     color: #666;
     font-size: 1rem;
@@ -527,28 +472,28 @@ onMounted(() => {
     border-radius: 8px;
     height: 50px;
     box-shadow: 0 0 0 1px #dcdfe6;
-    
+
     &:hover, &.is-focus {
       box-shadow: 0 0 0 1px #4facfe;
     }
-    
+
     .el-input__inner {
       font-size: 1rem;
     }
   }
-  
+
   .form-options {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
-    
+
     .forgot-password {
       font-size: 0.9rem;
       color: #4facfe;
     }
   }
-  
+
   .login-button {
     width: 100%;
     height: 50px;
@@ -556,42 +501,42 @@ onMounted(() => {
     border: none;
     font-size: 1.1rem;
     font-weight: 500;
-    
+
     &:hover {
       transform: translateY(-2px);
       box-shadow: 0 8px 16px rgba(79, 172, 254, 0.3);
     }
-    
+
     &:active {
       transform: translateY(0);
     }
   }
-  
+
   .divider {
     display: flex;
     align-items: center;
     margin: 30px 0;
-    
+
     &::before, &::after {
       content: '';
       flex: 1;
       height: 1px;
       background-color: #eee;
     }
-    
+
     span {
       padding: 0 16px;
       color: #999;
       font-size: 0.9rem;
     }
   }
-  
+
   .oauth-options {
     display: flex;
     justify-content: center;
     gap: 20px;
     margin-bottom: 20px;
-    
+
     .oauth-button {
       width: 48px;
       height: 48px;
@@ -603,36 +548,36 @@ onMounted(() => {
       color: white;
       border: none;
       transition: all 0.3s;
-      
+
       &:hover {
         transform: translateY(-3px);
         box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
       }
-      
+
       &.wechat {
         background-color: #07c160;
       }
-      
+
       &.qq {
         background-color: #12b7f5;
       }
-      
+
       &.school {
         background-color: #f56c6c;
       }
     }
   }
-  
+
   .register-link {
     text-align: center;
     font-size: 0.95rem;
     color: #666;
-    
+
     a {
       color: #4facfe;
       text-decoration: none;
       font-weight: 500;
-      
+
       &:hover {
         text-decoration: underline;
       }
@@ -648,7 +593,7 @@ onMounted(() => {
   color: rgba(255, 255, 255, 0.5);
   font-size: 0.8rem;
   z-index: 10;
-  
+
   p {
     margin: 5px 0;
   }
@@ -670,18 +615,18 @@ onMounted(() => {
   .login-card {
     padding: 30px 20px;
   }
-  
+
   .card-header .logo-text {
     font-size: 1.6rem;
   }
-  
+
   .oauth-options {
     gap: 15px;
-    
+
     .oauth-button {
       width: 42px;
       height: 42px;
     }
   }
 }
-</style> 
+</style>
