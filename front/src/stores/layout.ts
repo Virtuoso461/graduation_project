@@ -112,17 +112,33 @@ export const useLayoutStore = defineStore('layout', () => {
     }
   ]
   
-  // 添加 refreshSidebar 方法
+  // 增强 refreshSidebar 方法
   const refreshSidebar = () => {
-    if (device.value === 'mobile') {
-      closeSidebar(true)
-    } else {
-      sidebar.value.opened = true
-    }
+    // 保存当前的收缩状态
+    const currentCollapsed = sidebarCollapsed.value
+    
+    // 强制触发视图更新 - 通过快速切换状态
+    sidebarCollapsed.value = !currentCollapsed
+    setTimeout(() => {
+      sidebarCollapsed.value = currentCollapsed
+      
+      // 根据设备类型处理侧边栏状态
+      if (device.value === 'mobile') {
+        closeSidebar(true)
+      } else {
+        sidebar.value.opened = true
+      }
+    }, 50)
   }
 
-  const updateDeviceType = (type: string) => {
-    device.value = type
+  const updateDeviceType = (type: string | number) => {
+    if (typeof type === 'number') {
+      // 如果是数字类型，根据宽度判断设备类型
+      device.value = type <= 768 ? 'mobile' : 'desktop' 
+    } else {
+      // 如果是字符串类型，直接设置
+      device.value = type
+    }
   }
 
   const toggleSidebar = () => {

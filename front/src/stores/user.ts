@@ -12,6 +12,7 @@ interface LoginResponseData {
   username: string
   role: string
   token?: string
+  user?: any
 }
 
 interface UserState {
@@ -44,6 +45,13 @@ export const useUserStore = defineStore('user', () => {
     const token = localStorage.getItem('token')
 
     if (storedUser && token) {
+      // 检查token格式是否有效
+      if (token.split('.').length !== 3) {
+        console.error('启动时检测到无效token，执行清理');
+        clearUserState();
+        return;
+      }
+      
       try {
         userInfo.value = JSON.parse(storedUser)
         isLoggedIn.value = true
@@ -82,16 +90,30 @@ export const useUserStore = defineStore('user', () => {
       if (result.code === 200 && result.data) {
         const userData = result.data;
         console.log('登录成功，登录接口返回的用户信息:', userData);
+        
+        // 根据后端返回结构获取token (data中包含token和user)
+        const token = userData.token || '';
+        const userObject = userData.user || {};
+        
+        if (!token) {
+          console.error('登录接口未返回token，响应数据结构:', userData);
+          ElMessage.error('登录成功，但未获取到有效令牌');
+          return false; // 如果没有token，登录失败
+        }
+        
+        // 立即保存token到localStorage，确保后续请求能使用新token
+        localStorage.setItem('token', token);
+        console.log('已保存新token到localStorage:', token.substring(0, 15) + '...');
 
         // 将用户ID保存到localStorage，以便后续使用
         localStorage.setItem('currentUserId', credentials.username);
 
         // 构建基本用户信息（仅包含登录必需的字段，其他字段将从后端获取）
         const user: ExtendedUserInfo = {
-          id: userData.id,
-          name: '', // 留空，等待从后端获取真实姓名
+          id: userObject.id || userData.id || '',
+          name: userObject.username || '', // 默认使用username作为name
           avatar: '', // 留空，等待从后端获取头像
-          role: userData.role,
+          role: userObject.role || userData.role || 'STUDENT',
           email: credentials.username, // 用户名就是邮箱
           createdAt: new Date().toISOString(),
           lastLoginAt: new Date().toISOString(),
@@ -177,10 +199,10 @@ export const useUserStore = defineStore('user', () => {
         // 保存用户信息和令牌
         userInfo.value = user;
         isLoggedIn.value = true;
-        // 存储到本地存储
+        
+        // 存储用户信息到本地存储
         localStorage.setItem('user', JSON.stringify(user));
-        localStorage.setItem('token', userData.token || 'mock-token');
-
+        
         console.log('登录成功，已保存用户信息和令牌');
         ElMessage.success('登录成功');
         return true;
@@ -209,44 +231,48 @@ export const useUserStore = defineStore('user', () => {
     loading.value = true
 
     try {
-      // 在实际应用中，这里会调用真实的注册API
-      // 这里使用模拟数据代替
-      await new Promise(resolve => setTimeout(resolve, 1000))
-
-      // 模拟注册成功
-      const mockUser: ExtendedUserInfo = {
-        id: Math.random().toString(36).substr(2, 9),
-        name: userData.username,
-        avatar: '',
-        role: '学生',
-        email: userData.email,
-        phone: userData.phone,
-        studentId: userData.studentId,
-        department: '计算机科学与技术学院',
-        major: '软件工程',
-        grade: '2023级',
-        createdAt: new Date().toISOString(),
-        lastLoginAt: new Date().toISOString(),
-        courseCount: 0,
-        studyHours: 0,
-        points: 0
+      // 调用真实的注册API
+      console.log('注册请求参数:', userData);
+      
+      // 构建注册请求数据
+      const registerData = {
+        username: userData.email, // 使用email作为username
+        password: userData.password,
+        name: userData.username, // 用户昵称
+        phoneNumber: userData.phone,
+        number: userData.studentId || '', // 学号
+        role: 'STUDENT' // 默认为学生角色
+      };
+      
+      // 根据是否有学号决定调用哪个注册API
+      const result = await userApi.studentRegister(registerData) as ApiResponse<any>;
+      console.log('注册API返回结果:', result);
+      
+      if (result && result.code === 200) {
+        // 注册成功后，直接调用登录API
+        const loginSuccess = await login({
+          username: userData.email,
+          password: userData.password
+        });
+        
+        if (loginSuccess) {
+          ElMessage.success('注册成功并已自动登录');
+          return true;
+        } else {
+          ElMessage.warning('注册成功，但自动登录失败，请手动登录');
+          return true; // 只要注册成功就返回true
+        }
+      } else {
+        const errorMsg = result?.message || '注册失败，请稍后重试';
+        ElMessage.error(errorMsg);
+        return false;
       }
-
-      // 保存用户信息和令牌
-      userInfo.value = mockUser
-      isLoggedIn.value = true
-
-      // 存储到本地存储
-      localStorage.setItem('user', JSON.stringify(mockUser))
-      localStorage.setItem('token', 'mock-jwt-token')
-
-      ElMessage.success('注册成功')
-      return true
     } catch (error) {
-      ElMessage.error('注册失败，请稍后重试')
-      return false
+      console.error('注册请求出错:', error);
+      ElMessage.error('注册失败，请稍后重试');
+      return false;
     } finally {
-      loading.value = false
+      loading.value = false;
     }
   }
 

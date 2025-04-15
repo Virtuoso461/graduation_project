@@ -8,11 +8,11 @@ import { getCurrentUserInfo, getUserInfo, saveUserInfo } from '@/utils/indexedDB
 export const userApi = {
   // 学生登录
   login: (data: { username: string; password: string }) =>
-    post('/student/login', data),
+    post('/api/auth/login', data),
 
   // 教师登录
   teacherLogin: (data: { username: string; password: string }) =>
-    post('/teacher/login', data),
+    post('/api/auth/login', data),
 
   // 学生注册
   studentRegister: (data: {
@@ -22,7 +22,7 @@ export const userApi = {
     phoneNumber: string;
     number: string;
     role: string;
-  }) => post('/student/register', data),
+  }) => post('/api/auth/student/register', data),
 
   // 教师注册
   teacherRegister: (data: {
@@ -32,7 +32,7 @@ export const userApi = {
     phoneNumber: string;
     number: string;
     role: string;
-  }) => post('/teacher/register', data),
+  }) => post('/api/auth/teacher/register', data),
 
   // 获取用户信息
   getUserInfo: () => get('/user/info'),
@@ -60,7 +60,7 @@ export const userApi = {
  * 个人资料相关接口
  */
 export const profileApi = {
-  // 获取个人资料 - 从后端API获取
+  // 获取个人资料
   getProfile: async (email?: string) => {
     try {
       // 获取用户邮箱，优先使用传入的email，其次使用localStorage
@@ -74,12 +74,10 @@ export const profileApi = {
         }
       }
 
-      // 从后端API获取用户资料，使用userEmail作email参数查询profile表
-      console.log('从后端API获取用户资料，使用email:', userEmail)
+      console.log('从后端API获取用户资料')
       try {
-        // 调用后端API，传递email参数
-        console.log('调用后端API获取用户资料，参数:', { email: userEmail })
-        const response = await get('/api/profile', { email: userEmail })
+        // 调用后端API，使用新的接口路径
+        const response = await get('/api/student/profile') as any
         console.log('后端API返回的用户资料:', response)
 
         // 检查后端返回的数据格式
@@ -111,7 +109,7 @@ export const profileApi = {
     }
   },
 
-  // 更新个人资料 - 先保存到后端，然后同步到IndexedDB
+  // 更新个人资料
   updateProfile: async (data: any) => {
     try {
       const userId = localStorage.getItem('currentUserId')
@@ -124,31 +122,19 @@ export const profileApi = {
         }
       }
 
-      // 获取现有用户信息
-      const existingUser = await getUserInfo(userId)
-
-      if (!existingUser) {
-        console.warn('更新失败：未找到用户信息', userId)
-        return {
-          code: 404,
-          message: '未找到用户信息',
-          data: {}
-        }
-      }
-
       // 准备要提交给后端的数据
       const profileDTO = {
         ...data,
         email: userId // 确保有email字段
       }
 
-      // 先尝试保存到后端
+      // 保存到后端
       try {
-        console.log('尝试将个人资料保存到后端:', profileDTO)
-        const response = await post('/api/profile', profileDTO)
+        console.log('将个人资料保存到后端:', profileDTO)
+        const response = await post('/api/student/profile', profileDTO) as any
         console.log('后端保存个人资料响应:', response)
 
-        // 如果后端保存成功，使用后端返回的数据更新IndexedDB
+        // 如果后端保存成功，同时更新IndexedDB
         if (response && response.code === 200 && response.data) {
           // 合并新的个人资料
           const updatedUserInfo = {
@@ -167,27 +153,11 @@ export const profileApi = {
             data: updatedUserInfo
           }
         }
+
+        return response;
       } catch (apiError) {
         console.error('保存个人资料到后端失败:', apiError)
-        // 如果后端保存失败，仍然更新IndexedDB
-      }
-
-      // 如果后端保存失败或返回数据不正确，仍然更新IndexedDB
-      const updatedUserInfo = {
-        ...existingUser, // 保留现有的字段
-        ...data, // 更新新的字段
-        // 确保有email字段作为主键
-        email: userId
-      }
-
-      // 保存到IndexedDB
-      await saveUserInfo(updatedUserInfo)
-      console.log('已更新用户信息到IndexedDB:', updatedUserInfo)
-
-      return {
-        code: 200,
-        message: 'success',
-        data: updatedUserInfo
+        throw apiError;
       }
     } catch (error) {
       console.error('更新个人资料失败:', error)
@@ -199,7 +169,50 @@ export const profileApi = {
     }
   },
 
-  // 初始化个人资料 - 先从后端初始化，然后同步到IndexedDB
+  // 上传头像
+  uploadAvatar: async (file: File) => {
+    try {
+      // 创建FormData对象
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // 发送头像上传请求
+      const response = await post('/api/student/profile/avatar', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      }) as any;
+
+      return response;
+    } catch (error) {
+      console.error('上传头像失败:', error);
+      return {
+        code: 500,
+        message: '上传头像失败',
+        data: null
+      };
+    }
+  },
+
+  // 修改密码
+  changePassword: async (oldPassword: string, newPassword: string) => {
+    try {
+      const response = await post('/api/student/profile/change-password', {
+        oldPassword,
+        newPassword
+      }) as any;
+      return response;
+    } catch (error) {
+      console.error('修改密码失败:', error);
+      return {
+        code: 500,
+        message: '修改密码失败',
+        data: null
+      };
+    }
+  },
+  
+  // 初始化个人资料
   initProfile: async (data: any) => {
     try {
       if (!data || !data.id) {
@@ -213,39 +226,29 @@ export const profileApi = {
 
       const email = data.email || data.id
 
-      // 先尝试从后端初始化个人资料
+      // 从后端获取个人资料
       try {
-        console.log('尝试从后端初始化个人资料:', email)
-        const response = await post('/api/profile/init', null, { params: { email } })
-        console.log('后端初始化个人资料响应:', response)
+        const response = await get('/api/student/profile') as any
+        console.log('后端获取个人资料响应:', response)
 
         if (response && response.code === 200 && response.data) {
-          // 如果后端初始化成功，使用后端返回的数据
-          // 确保基本字段存在
-          const profileData = {
+          // 如果后端获取成功，使用后端返回的数据
+          // 保存到IndexedDB
+          await saveUserInfo({
             ...response.data,
             email: email // 确保有email字段作为主键
-          }
+          })
+          console.log('已将后端个人资料同步到IndexedDB')
 
-          // 保存到IndexedDB
-          await saveUserInfo(profileData)
-          console.log('已将后端初始化的个人资料同步到IndexedDB:', profileData)
-
-          return {
-            code: 200,
-            message: 'success',
-            data: profileData
-          }
+          return response
         }
       } catch (apiError) {
-        console.error('从后端初始化个人资料失败:', apiError)
-        // 如果后端初始化失败，使用本地数据
+        console.error('从后端获取个人资料失败:', apiError)
       }
 
-      // 如果后端初始化失败或返回数据不正确，使用本地数据
-      // 确保基本字段存在
+      // 如果后端获取失败，使用默认数据
       const profileData = {
-        email: email, // 确保有email字段作为主键
+        email: email,
         username: data.username || email.split('@')[0],
         name: data.name || '',
         avatar: data.avatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png',
@@ -257,7 +260,7 @@ export const profileApi = {
 
       // 保存到IndexedDB
       await saveUserInfo(profileData)
-      console.log('已初始化用户个人资料到IndexedDB:', profileData)
+      console.log('已使用默认数据初始化个人资料到IndexedDB')
 
       return {
         code: 200,
@@ -271,6 +274,116 @@ export const profileApi = {
         message: '初始化个人资料失败',
         data: {}
       }
+    }
+  }
+}
+
+/**
+ * 学习数据相关接口
+ */
+export const learningDataApi = {
+  // 获取学习概况
+  getOverview: async () => {
+    try {
+      const response = await get('/api/student/profile/overview') as any;
+      console.log('获取学习概况成功:', response);
+      return response;
+    } catch (error) {
+      console.error('获取学习概况失败:', error);
+      return {
+        code: 500,
+        message: '获取学习概况失败',
+        data: null
+      };
+    }
+  },
+
+  // 获取学习记录
+  getLearningRecords: async (params?: { page?: number; size?: number; startDate?: string; endDate?: string }) => {
+    try {
+      const response = await get('/api/student/profile/learning-records', params) as any;
+      console.log('获取学习记录成功:', response);
+      return response;
+    } catch (error) {
+      console.error('获取学习记录失败:', error);
+      return {
+        code: 500,
+        message: '获取学习记录失败',
+        data: {
+          records: [],
+          total: 0
+        }
+      };
+    }
+  },
+
+  // 获取作业提交情况
+  getAssignments: async (params?: { page?: number; size?: number; courseId?: string }) => {
+    try {
+      const response = await get('/api/student/profile/assignments', params) as any;
+      console.log('获取作业提交情况成功:', response);
+      return response;
+    } catch (error) {
+      console.error('获取作业提交情况失败:', error);
+      return {
+        code: 500,
+        message: '获取作业提交情况失败',
+        data: {
+          assignments: [],
+          total: 0
+        }
+      };
+    }
+  },
+
+  // 获取考试成绩
+  getExams: async (params?: { page?: number; size?: number; courseId?: string }) => {
+    try {
+      const response = await get('/api/student/profile/exams', params) as any;
+      console.log('获取考试成绩成功:', response);
+      return response;
+    } catch (error) {
+      console.error('获取考试成绩失败:', error);
+      return {
+        code: 500,
+        message: '获取考试成绩失败',
+        data: {
+          exams: [],
+          total: 0
+        }
+      };
+    }
+  },
+
+  // 获取学习统计数据
+  getStatistics: async () => {
+    try {
+      const response = await get('/api/student/profile/statistics') as any;
+      console.log('获取学习统计数据成功:', response);
+      return response;
+    } catch (error) {
+      console.error('获取学习统计数据失败:', error);
+      return {
+        code: 500,
+        message: '获取学习统计数据失败',
+        data: null
+      };
+    }
+  },
+
+  // 获取学习趋势
+  getTrend: async (params?: { period?: 'week' | 'month' | 'year' }) => {
+    try {
+      const response = await get('/api/student/profile/trend', params) as any;
+      console.log('获取学习趋势成功:', response);
+      return response;
+    } catch (error) {
+      console.error('获取学习趋势失败:', error);
+      return {
+        code: 500,
+        message: '获取学习趋势失败',
+        data: null
+      };
     }
   }
 }
@@ -605,25 +718,34 @@ export const examApi = {
  */
 export const assignmentApi = {
   // 获取作业列表
-  getAssignments: () => get('/assignments'),
+  getAssignments: () => get('/api/student/assignments'),
 
   // 获取作业详情
-  getAssignmentDetail: (id: string) => get(`/assignments/${id}`),
+  getAssignmentDetail: (id: string) => get(`/api/student/assignments/${id}`),
 
   // 提交作业
-  submitAssignment: (id: string, data: any) => post(`/assignments/${id}/submit`, data),
+  submitAssignment: (data: any) => post('/api/student/assignments/submit', data),
 
-  // 获取作业反馈
-  getAssignmentFeedback: (id: string) => get(`/assignments/${id}/feedback`),
+  // 上传作业文件
+  uploadAssignmentFile: (assignmentId: string, formData: FormData) => 
+    post(`/api/student/assignments/${assignmentId}/upload`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    }),
 
-  // 创建作业
-  createAssignment: (data: any) => post('/assignments', data),
+  // 获取作业提交历史
+  getSubmissionHistory: () => get('/api/student/assignments/history'),
 
-  // 更新作业
-  updateAssignment: (id: string, data: any) => post(`/assignments/${id}`, data),
+  // 获取作业提交详情
+  getSubmissionDetail: (assignmentId: string) => 
+    get(`/api/student/assignments/submissions/${assignmentId}`),
 
-  // 删除作业
-  deleteAssignment: (id: number) => del(`/assignments/${id}`)
+  // 获取待完成作业
+  getPendingAssignments: () => get('/api/student/assignments/pending'),
+
+  // 获取已完成作业
+  getCompletedAssignments: () => get('/api/student/assignments/completed')
 }
 
 /**

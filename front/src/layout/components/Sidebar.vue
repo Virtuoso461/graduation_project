@@ -116,16 +116,45 @@ const userInitials = computed(() => {
 
 // 添加窗口大小变化处理
 const handleResize = () => {
-  layoutStore.updateDeviceType()
+  // 将number类型转换为string类型，以匹配API期望的参数类型
+  layoutStore.updateDeviceType(window.innerWidth.toString())
+  
+  // 在窗口大小变化时强制重新计算布局
+  document.body.style.display = 'none'
+  document.body.offsetHeight // 触发重排
+  document.body.style.display = ''
+  
+  // 刷新侧边栏状态
   layoutStore.refreshSidebar()
+}
+
+// 添加开发者工具状态检测
+const detectDevTools = () => {
+  const threshold = 160; // 检测窗口变化的阈值
+  const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+  const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+  
+  if (widthThreshold || heightThreshold) {
+    // 开发者工具可能已打开，准备处理
+    console.log('检测到开发者工具状态变化')
+    
+    // 延迟执行，确保在开发者工具关闭后处理
+    setTimeout(() => {
+      handleResize()
+    }, 300)
+  }
 }
 
 onMounted(() => {
   window.addEventListener('resize', handleResize)
+  
+  // 监听开发者工具打开关闭
+  window.addEventListener('resize', detectDevTools)
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
+  window.removeEventListener('resize', detectDevTools)
 })
 </script>
 
@@ -307,10 +336,34 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   margin-right: 10px;
+  visibility: visible !important; /* 确保可见性 */
+  opacity: 1 !important; /* 确保不透明 */
+  transform: translateZ(0); /* 强制硬件加速 */
+  backface-visibility: visible !important; /* 防止元素消失 */
+  perspective: 1000px; /* 配合硬件加速 */
+  will-change: transform, opacity; /* 提示浏览器优化 */
 }
 
 /* 确保图标在折叠状态下也能正确显示 */
 .collapsed .el-menu :deep(.el-icon) {
   margin: 0;
+}
+
+/* 添加图标强制可见的样式 */
+.menu-icon {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.8);
+  width: 24px;
+  height: 24px;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative;
+  z-index: 10;
+  transform: translateZ(0);
+  backface-visibility: visible !important;
+  transition: none !important; /* 防止过渡效果影响可见性 */
 }
 </style> 

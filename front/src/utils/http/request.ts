@@ -13,9 +13,33 @@ axiosInstance.interceptors.request.use(
   (config) => {
     // 在发送请求之前做一些处理，例如添加token
     const token = localStorage.getItem('token')
+    
+    // 更清晰的token调试信息
     if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`
+      // 避免打印过长的token
+      const tokenDisplay = token.length > 30 ? 
+        `${token.substring(0, 15)}...${token.substring(token.length-10)}` : 
+        token;
+      console.log(`请求: ${config.url} - 使用token: ${tokenDisplay}`);
+      
+      // 检查token格式是否正确
+      if (token.split('.').length !== 3) {
+        console.warn('Token格式不正确 (应有3部分)，已自动清除');
+        // 发现无效token时自动清除，防止后续请求继续使用
+        localStorage.removeItem('token');
+      } else {
+        config.headers['Authorization'] = `Bearer ${token}`
+      }
+    } else {
+      // 对于登录/注册请求，不显示token缺失警告（因为这些请求本来就不需要token）
+      const isAuthRequest = config.url?.includes('/auth/login') || 
+                           config.url?.includes('/auth/register');
+      
+      if (!isAuthRequest) {
+        console.warn(`请求: ${config.url} - 未使用token (未登录或token丢失)`);
+      }
     }
+    
     return config
   },
   (error) => {

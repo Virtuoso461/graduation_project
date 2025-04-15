@@ -1,0 +1,15 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+-每次调用前查看所有源代码 梳理出功能 
+-优先在原有代码的基础上修改 满足不了需求再去新建文件
+-每一个方法必须包含controller类 service接口 serviceimpl类 repository接口 entity类四个部分
+-controller里的复杂代码一律放到serviceimpl中 
+-controller返回值common下的Result类 
+-技术栈为Java21 Springboot3 SpringSecurity6 其他技术栈可以自由拓展
+-默认使用最新语法 不要使用过时语法
+-必须连接到数据库 不准使用假数据
+-controller类里要使用@RequestBody取代@RequestParam dto vo可以随意定义
+-禁止使用lombok和@Resource @Autoweird

@@ -123,9 +123,9 @@ public class ExamController {
     }
     
     @GetMapping("/stats")
-    public ResponseEntity<ExamStatsDTO> getExamStats(@RequestParam("email") String email) {
+    public ResponseEntity<Map<String, Object>> getExamStats(@RequestParam("email") String email) {
         try {
-            ExamStatsDTO stats = examService.getExamStats(email);
+            Map<String, Object> stats = examService.getExamStats(email);
             return new ResponseEntity<>(stats, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);

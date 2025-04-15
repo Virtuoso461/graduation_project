@@ -40,9 +40,9 @@
               <div class="card-header">
                 <span>学习时长趋势</span>
                 <el-radio-group v-model="durationChartType" size="small">
-                  <el-radio-button label="day">按天</el-radio-button>
-                  <el-radio-button label="week">按周</el-radio-button>
-                  <el-radio-button label="month">按月</el-radio-button>
+                  <el-radio-button value="day">按天</el-radio-button>
+                  <el-radio-button value="week">按周</el-radio-button>
+                  <el-radio-button value="month">按月</el-radio-button>
                 </el-radio-group>
               </div>
             </template>
@@ -118,7 +118,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import {
   Timer,
   Document,
@@ -128,65 +128,244 @@ import {
   ArrowDown,
   Download
 } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import { learningDataApi } from '@/utils/http/api'
 
 const timeRange = ref('7d')
 const durationChartType = ref('day')
+const isLoading = ref(false)
 
-// 模拟数据
+// 响应式数据
 const statistics = ref([
   {
     title: '总学习时长',
-    value: '128小时',
+    value: '0小时',
     icon: 'Timer',
     color: '#409EFF',
-    trend: 12.5
+    trend: 0
   },
   {
     title: '完成课程数',
-    value: '24',
+    value: '0',
     icon: 'Document',
     color: '#67C23A',
-    trend: 8.3
+    trend: 0
   },
   {
     title: '获得积分',
-    value: '2560',
+    value: '0',
     icon: 'Star',
     color: '#E6A23C',
-    trend: -2.1
+    trend: 0
   },
   {
     title: '学习排名',
-    value: '第12名',
+    value: '第0名',
     icon: 'Trophy',
     color: '#F56C6C',
-    trend: 5.2
+    trend: 0
   }
 ])
 
-const detailData = ref([
-  {
-    date: '2024-03-18',
-    duration: '4小时',
-    courses: 2,
-    points: 120,
-    efficiency: '85%'
-  },
-  {
-    date: '2024-03-17',
-    duration: '3.5小时',
-    courses: 1,
-    points: 100,
-    efficiency: '90%'
-  },
-  {
-    date: '2024-03-16',
-    duration: '5小时',
-    courses: 3,
-    points: 150,
-    efficiency: '88%'
+const detailData = ref([])
+
+// 获取学习概况数据
+const fetchOverview = async () => {
+  try {
+    isLoading.value = true
+    const response = await learningDataApi.getOverview()
+    
+    if (response && response.code === 200 && response.data) {
+      const data = response.data
+      
+      // 更新统计卡片数据
+      statistics.value = [
+        {
+          title: '总学习时长',
+          value: `${data.totalStudyHours || 0}小时`,
+          icon: 'Timer',
+          color: '#409EFF',
+          trend: data.studyHoursTrend || 0
+        },
+        {
+          title: '完成课程数',
+          value: String(data.completedCourses || 0),
+          icon: 'Document',
+          color: '#67C23A',
+          trend: data.completedCoursesTrend || 0
+        },
+        {
+          title: '获得积分',
+          value: String(data.totalPoints || 0),
+          icon: 'Star',
+          color: '#E6A23C',
+          trend: data.pointsTrend || 0
+        },
+        {
+          title: '学习排名',
+          value: `第${data.ranking || 0}名`,
+          icon: 'Trophy',
+          color: '#F56C6C',
+          trend: data.rankingTrend || 0
+        }
+      ]
+      
+      console.log('学习概况数据更新成功')
+    } else {
+      console.warn('获取学习概况数据失败:', response)
+    }
+  } catch (error) {
+    console.error('获取学习概况出错:', error)
+    ElMessage.error('获取学习概况数据失败')
+  } finally {
+    isLoading.value = false
   }
-])
+}
+
+// 获取学习记录详细数据
+const fetchLearningRecords = async () => {
+  try {
+    isLoading.value = true
+    
+    // 根据选择的时间范围确定开始日期
+    let startDate
+    const now = new Date()
+    
+    switch (timeRange.value) {
+      case '7d':
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+        break
+      case '30d':
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+        break
+      case '90d':
+        startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
+        break
+      default:
+        startDate = null
+    }
+    
+    const params = startDate ? {
+      startDate: startDate.toISOString().split('T')[0],
+      endDate: now.toISOString().split('T')[0]
+    } : {}
+    
+    const response = await learningDataApi.getLearningRecords(params)
+    
+    if (response && response.code === 200 && response.data) {
+      // 更新详细数据表格
+      detailData.value = response.data.records.map((record: any) => ({
+        date: record.date,
+        duration: `${record.studyHours || 0}小时`,
+        courses: record.completedCourses || 0,
+        points: record.points || 0,
+        efficiency: `${record.efficiency || 0}%`
+      }))
+      
+      console.log('学习记录数据更新成功')
+    } else {
+      console.warn('获取学习记录数据失败:', response)
+    }
+  } catch (error) {
+    console.error('获取学习记录出错:', error)
+    ElMessage.error('获取学习记录数据失败')
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// 获取学习趋势数据
+const fetchTrend = async () => {
+  try {
+    isLoading.value = true
+    
+    // 转换durationChartType为API参数
+    const period = durationChartType.value === 'day' ? 'week' : 
+                  durationChartType.value === 'week' ? 'month' : 'year'
+    
+    const response = await learningDataApi.getTrend({ period })
+    
+    if (response && response.code === 200 && response.data) {
+      // 这里解析趋势数据，更新图表
+      // 实际项目中，这里会将数据传给ECharts组件
+      console.log('学习趋势数据更新成功:', response.data)
+      
+      // 如果有ECharts图表，可以这样更新
+      // studyHoursChart.value.setOption({
+      //   xAxis: { data: response.data.dates },
+      //   series: [{ data: response.data.studyHours }]
+      // })
+      
+    } else {
+      console.warn('获取学习趋势数据失败:', response)
+    }
+  } catch (error) {
+    console.error('获取学习趋势出错:', error)
+    ElMessage.error('获取学习趋势数据失败')
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// 获取学习统计数据
+const fetchStatistics = async () => {
+  try {
+    isLoading.value = true
+    const response = await learningDataApi.getStatistics()
+    
+    if (response && response.code === 200 && response.data) {
+      // 这里解析统计数据，更新各种图表
+      console.log('学习统计数据更新成功:', response.data)
+      
+      // 如果有课程完成率饼图
+      // courseCompletionChart.value.setOption({
+      //   series: [{
+      //     data: [
+      //       { value: response.data.completedCourses, name: '已完成' },
+      //       { value: response.data.totalCourses - response.data.completedCourses, name: '未完成' }
+      //     ]
+      //   }]
+      // })
+      
+      // 如果有知识点掌握度雷达图
+      // knowledgePointsChart.value.setOption({
+      //   radar: { indicator: response.data.knowledgePoints.map(item => ({ name: item.name, max: 100 })) },
+      //   series: [{ data: [{ value: response.data.knowledgePoints.map(item => item.mastery) }] }]
+      // })
+      
+    } else {
+      console.warn('获取学习统计数据失败:', response)
+    }
+  } catch (error) {
+    console.error('获取学习统计出错:', error)
+    ElMessage.error('获取学习统计数据失败')
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// 加载所有数据
+const loadAllData = () => {
+  fetchOverview()
+  fetchLearningRecords()
+  fetchTrend()
+  fetchStatistics()
+}
+
+// 监听时间范围变化
+watch(timeRange, () => {
+  fetchLearningRecords()
+})
+
+// 监听图表类型变化
+watch(durationChartType, () => {
+  fetchTrend()
+})
+
+// 页面加载时获取数据
+onMounted(() => {
+  loadAllData()
+})
 </script>
 
 <style lang="scss" scoped>

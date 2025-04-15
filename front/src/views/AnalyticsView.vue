@@ -40,9 +40,9 @@
               <div class="card-header">
                 <span>学习时长趋势</span>
                 <el-radio-group v-model="durationChartType" size="small">
-                  <el-radio-button label="day">按天</el-radio-button>
-                  <el-radio-button label="week">按周</el-radio-button>
-                  <el-radio-button label="month">按月</el-radio-button>
+                  <el-radio-button value="day">按天</el-radio-button>
+                  <el-radio-button value="week">按周</el-radio-button>
+                  <el-radio-button value="month">按月</el-radio-button>
                 </el-radio-group>
               </div>
             </template>

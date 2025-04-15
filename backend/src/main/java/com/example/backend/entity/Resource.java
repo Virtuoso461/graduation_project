@@ -12,61 +12,64 @@ public class Resource {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @Column(nullable = false)
     private String title;
-    
+
     @Column(columnDefinition = "TEXT")
     private String description;
-    
+
     @Column(name = "resource_type", nullable = false)
     private String resourceType; // 资源类型：文档、视频、音频、链接等
-    
+
     @Column
     private String category; // 资源分类：课程资料、作业、考试、参考资料等
-    
+
     @Column(name = "file_url")
     private String fileUrl; // 文件URL，如果是文件类型
-    
+
     @Column(name = "file_name")
     private String fileName; // 文件名
-    
+
     @Column(name = "file_size")
     private Long fileSize; // 文件大小（字节）
-    
+
     @Column(name = "file_type")
     private String fileType; // 文件类型（扩展名）
-    
+
     @Column(name = "external_link")
     private String externalLink; // 外部链接，如果是链接类型
-    
+
+    @Column(name = "creator_id")
+    private Long creatorId; // 创建者ID
+
     @Column(name = "creator_email", nullable = false)
     private String creatorEmail; // 创建者邮箱
-    
+
     @Column(name = "creator_name")
     private String creatorName; // 创建者名称
-    
+
     @Column(name = "course_id")
     private Long courseId; // 关联的课程ID
-    
+
     @Column(name = "download_count")
     private Integer downloadCount = 0; // 下载次数
-    
+
     @Column(name = "view_count")
     private Integer viewCount = 0; // 查看次数
-    
+
     @Column(name = "create_time")
     @Temporal(TemporalType.TIMESTAMP)
     private Date createTime;
-    
+
     @Column(name = "update_time")
     @Temporal(TemporalType.TIMESTAMP)
     private Date updateTime;
-    
+
     // 构造函数
     public Resource() {
     }
-    
+
     // Getters and Setters
     public Long getId() {
         return id;
@@ -146,6 +149,14 @@ public class Resource {
 
     public void setExternalLink(String externalLink) {
         this.externalLink = externalLink;
+    }
+
+    public Long getCreatorId() {
+        return creatorId;
+    }
+
+    public void setCreatorId(Long creatorId) {
+        this.creatorId = creatorId;
     }
 
     public String getCreatorEmail() {

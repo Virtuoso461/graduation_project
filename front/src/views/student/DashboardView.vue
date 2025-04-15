@@ -17,8 +17,8 @@
           <div class="stat-content">
             <h3>今日任务</h3>
             <div class="stat-value">{{ stats.completedTasks }}/{{ stats.totalTasks }}</div>
-            <el-progress 
-              :percentage="taskCompletionRate" 
+            <el-progress
+              :percentage="taskCompletionRate"
               :color="progressColors.tasks"
               :show-text="false"
               :stroke-width="6"
@@ -32,8 +32,8 @@
           <div class="stat-content">
             <h3>学习时长</h3>
             <div class="stat-value">{{ stats.studyTime }}小时</div>
-            <el-progress 
-              :percentage="studyTimePercentage" 
+            <el-progress
+              :percentage="studyTimePercentage"
               :color="progressColors.study"
               :show-text="false"
               :stroke-width="6"
@@ -47,8 +47,8 @@
           <div class="stat-content">
             <h3>连续学习</h3>
             <div class="stat-value">{{ stats.streak }}天</div>
-            <el-progress 
-              :percentage="streakPercentage" 
+            <el-progress
+              :percentage="streakPercentage"
               :color="progressColors.streak"
               :show-text="false"
               :stroke-width="6"
@@ -69,9 +69,9 @@
               <el-button type="primary" text>查看全部</el-button>
             </div>
             <div class="courses-grid">
-              <div 
-                v-for="course in currentCourses" 
-                :key="course.id" 
+              <div
+                v-for="course in currentCourses"
+                :key="course.id"
                 class="course-card"
                 @click="navigateToCourse(course.id)"
               >
@@ -84,8 +84,8 @@
                     <span class="course-instructor">{{ course.instructor }}</span>
                     <span class="course-progress">{{ course.progress }}%</span>
                   </div>
-                  <el-progress 
-                    :percentage="course.progress" 
+                  <el-progress
+                    :percentage="course.progress"
                     :color="course.color"
                     :show-text="false"
                     :stroke-width="4"
@@ -112,8 +112,8 @@
             <el-scrollbar :height="isMobile ? '250px' : '300px'">
               <transition-group name="todo-list" tag="ul" class="todo-items">
                 <li v-for="todo in todoList" :key="todo.id" class="todo-item">
-                  <el-checkbox 
-                    v-model="todo.completed" 
+                  <el-checkbox
+                    v-model="todo.completed"
                     @change="toggleTodo(todo.id)"
                     :disabled="todo.completed"
                   >
@@ -191,9 +191,9 @@
             </div>
             <el-scrollbar :height="isMobile ? '250px' : '300px'">
               <div class="resource-list">
-                <div 
-                  v-for="resource in recommendedResources" 
-                  :key="resource.id" 
+                <div
+                  v-for="resource in recommendedResources"
+                  :key="resource.id"
                   class="resource-item"
                   @click="openResource(resource)"
                 >
@@ -207,9 +207,9 @@
                       <span class="resource-type">{{ resourceTypes[resource.type] }}</span>
                       <span class="resource-author">{{ resource.author }}</span>
                       <span class="resource-rating">
-                        <el-rate 
-                          v-model="resource.rating" 
-                          disabled 
+                        <el-rate
+                          v-model="resource.rating"
+                          disabled
                           :colors="['#FFCA3A', '#FFCA3A', '#FFCA3A']"
                           :max="5"
                           :score-template="String(resource.rating)"
@@ -232,15 +232,15 @@ import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import * as echarts from 'echarts'
-import { 
-  Check, 
-  Timer, 
-  Calendar, 
-  Document, 
-  More, 
-  Reading, 
-  VideoPlay, 
-  Link, 
+import {
+  Check,
+  Timer,
+  Calendar,
+  Document,
+  More,
+  Reading,
+  VideoPlay,
+  Link,
   Collection,
   ArrowUp,
   ArrowDown,
@@ -488,7 +488,7 @@ const handleTodoCommand = (command: string, id: number) => {
   } else if (command === 'edit') {
     const todo = todoList.value.find(item => item.id === id)
     if (!todo) return
-    
+
     ElMessageBox.prompt('编辑待办事项', '编辑', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
@@ -508,13 +508,13 @@ const handleTodoCommand = (command: string, id: number) => {
 // 初始化每周学习统计图表
 const initWeeklyChart = () => {
   if (!weeklyChart.value) return
-  
+
   const chart = echarts.init(weeklyChart.value, null, {
     renderer: 'canvas',
     useDirtyRect: true,
     devicePixelRatio: window.devicePixelRatio
   })
-  
+
   const option = {
     tooltip: {
       trigger: 'axis',
@@ -565,16 +565,16 @@ const initWeeklyChart = () => {
       }
     ]
   }
-  
+
   chart.setOption(option)
-  
+
   // 响应窗口大小变化
   const resizeHandler = () => {
     chart.resize({ width: 'auto', height: 'auto' }) // 自动调整大小以适应容器
   }
-  
+
   window.addEventListener('resize', resizeHandler)
-  
+
   // 确保在组件卸载时移除事件监听
   onBeforeUnmount(() => {
     window.removeEventListener('resize', resizeHandler)
@@ -585,15 +585,15 @@ const initWeeklyChart = () => {
 // 初始化知识图谱预览
 const initKnowledgeGraph = () => {
   if (!knowledgeGraph.value) return
-  
+
   const chart = echarts.init(knowledgeGraph.value, null, {
     renderer: 'canvas',
     useDirtyRect: true,
     devicePixelRatio: window.devicePixelRatio
   })
-  
+
   const symbolSize = isMobile.value ? 0.7 : 1 // 移动设备上缩小节点
-  
+
   const option = {
     tooltip: {},
     series: [{
@@ -637,16 +637,16 @@ const initKnowledgeGraph = () => {
       }
     }]
   }
-  
+
   chart.setOption(option)
-  
+
   // 响应窗口大小变化
   const resizeHandler = () => {
     chart.resize({ width: 'auto', height: 'auto' }) // 自动调整大小以适应容器
   }
-  
+
   window.addEventListener('resize', resizeHandler)
-  
+
   // 确保在组件卸载时移除事件监听
   onBeforeUnmount(() => {
     window.removeEventListener('resize', resizeHandler)
@@ -658,19 +658,19 @@ const initKnowledgeGraph = () => {
 onMounted(() => {
   // 初始化每周学习时间图表
   initWeeklyChart()
-  
+
   // 初始化知识图谱
   initKnowledgeGraph()
-  
+
   // 添加窗口调整大小监听，以更新移动设备检测
   window.addEventListener('resize', () => {
     // isMobile会自动重新计算
-    
+
     if (weeklyChart.value) {
       const weeklyChartInstance = echarts.getInstanceByDom(weeklyChart.value)
       weeklyChartInstance?.resize({ width: 'auto', height: 'auto' })
     }
-    
+
     if (knowledgeGraph.value) {
       const knowledgeGraphInstance = echarts.getInstanceByDom(knowledgeGraph.value)
       knowledgeGraphInstance?.resize({ width: 'auto', height: 'auto' })
@@ -1061,43 +1061,43 @@ onMounted(() => {
     flex-direction: column;
     padding: 16px;
   }
-  
+
   .greeting {
     margin-bottom: 12px;
   }
-  
+
   .greeting h1 {
     font-size: 18px;
   }
-  
+
   .sub-greeting {
     font-size: 14px;
   }
-  
+
   .quick-stats {
     flex-direction: column;
     width: 100%;
     gap: 8px;
   }
-  
+
   .stat-card {
     min-width: unset;
     width: 100%;
   }
-  
+
   .cards-wrapper {
     padding: 0 4px 8px;
   }
-  
+
   .dashboard-card {
     padding: 10px;
     margin-bottom: 10px;
   }
-  
+
   .card-header h2 {
     font-size: 16px;
   }
-  
+
   .courses-grid {
     grid-template-columns: 1fr;
     gap: 10px;
@@ -1109,20 +1109,20 @@ onMounted(() => {
   .welcome-section {
     padding: 12px;
   }
-  
+
   .cards-wrapper {
     padding: 0 2px 4px;
   }
-  
+
   .dashboard-card {
     padding: 8px;
     margin-bottom: 8px;
   }
-  
+
   .card-header {
     margin-bottom: 8px;
   }
-  
+
   .card-header h2 {
     font-size: 15px;
   }
@@ -1139,4 +1139,4 @@ onMounted(() => {
   padding-left: 4px !important;
   padding-right: 4px !important;
 }
-</style> 
+</style>

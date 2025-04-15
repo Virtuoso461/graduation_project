@@ -65,7 +65,7 @@ lmstudio:
   timeout: 60000
 
 jwt:
-  secret: your-secret-key
+  secret: VcgU1efedTmLYKhOlEgU6xgOFfCkNMbCrZv2CZm00JzlQgfL4gdJYDXQdjd6U5hojMfzDIHlGsRK63SgUUh7hw
   # token有效期（单位：秒）
   expiration: 86400000 # 24小时的毫秒数
   # token刷新时间（单位：秒）

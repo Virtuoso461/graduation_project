@@ -55,7 +55,7 @@ public class AdminController {
      * 
      * @return 所有用户的列表
      */
-    @GetMapping("/users")
+    @GetMapping("/all-users")
     public Result<List<UserDTO>> getAllUsers() {
         try {
             validateAdminRole();
@@ -79,7 +79,7 @@ public class AdminController {
      * @param id 用户ID
      * @return 用户详情
      */
-    @GetMapping("/users/{id}")
+    @GetMapping("/all-users/{id}")
     public Result<UserDTO> getUserById(@PathVariable Long id) {
         try {
             validateAdminRole();
@@ -101,7 +101,7 @@ public class AdminController {
      * @param userDTO 用户信息
      * @return 创建结果
      */
-    @PostMapping("/users")
+    @PostMapping("/all-users")
     public Result<UserDTO> createUser(@RequestBody UserDTO userDTO) {
         try {
             validateAdminRole();
@@ -127,7 +127,7 @@ public class AdminController {
      * @param userDTO 用户信息
      * @return 更新结果
      */
-    @PutMapping("/users/{id}")
+    @PutMapping("/all-users/{id}")
     public Result<UserDTO> updateUser(@PathVariable Long id, @RequestBody UserDTO userDTO) {
         try {
             validateAdminRole();
@@ -152,7 +152,7 @@ public class AdminController {
      * @param id 用户ID
      * @return 删除结果
      */
-    @DeleteMapping("/users/{id}")
+    @DeleteMapping("/all-users/{id}")
     public Result<String> deleteUser(@PathVariable Long id) {
         try {
             validateAdminRole();
@@ -188,7 +188,7 @@ public class AdminController {
      * 
      * @return 所有课程的列表
      */
-    @GetMapping("/courses")
+    @GetMapping("/all-courses")
     public Result<List<Course>> getAllCourses() {
         try {
             validateAdminRole();

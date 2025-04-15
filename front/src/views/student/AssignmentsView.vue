@@ -218,7 +218,7 @@ import {
   ChatDotRound, ChatLineRound
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import axios from 'axios'
+import { assignmentApi } from '@/utils/http/api'
 import type { Assignment } from '@/types/assignment'
 import { getCurrentUserInfo } from '@/utils/indexedDB'
 
@@ -275,86 +275,34 @@ const fetchAssignments = async () => {
   try {
     isLoading.value = true
     
-    // 从 localStorage 获取用户邮箱
-    const userJson = localStorage.getItem('user')
-    let email = ''
+    // 获取待完成作业
+    const pendingResponse = await assignmentApi.getPendingAssignments()
+    console.log('待完成作业响应:', pendingResponse)
     
-    if (userJson) {
-      try {
-        const user = JSON.parse(userJson)
-        email = user.username || user.email
-        console.log('从用户信息获取到邮箱:', email)
-      } catch (e) {
-        console.error('解析用户信息失败:', e)
-      }
-    }
-    
-    // 如果从localStorage获取失败，尝试从cookie获取
-    if (!email) {
-      const cookies = document.cookie.split(';')
-      for (const cookie of cookies) {
-        const [name, value] = cookie.trim().split('=')
-        if (name === 'userEmail') {
-          email = decodeURIComponent(value)
-          console.log('从cookie获取到邮箱:', email)
-          break
-        }
-      }
-    }
-    
-    if (!email) {
-      console.error('无法获取用户邮箱')
-      ElMessage.error('未获取到用户邮箱，请重新登录')
-      return
-    }
-    
-    console.log('使用邮箱获取作业列表:', email)
-    
-    // 调用后端API获取数据
-    const response = await axios.get(`http://localhost:8080/api/assignments/stats/${email}`)
-    console.log('作业列表响应:', response)
-    
-    // 检查响应数据结构
-    if (response.data && response.data.data) {
-      const statsData = response.data.data
-      console.log('原始统计数据:', statsData)
-      
-      // 根据返回的特定数据结构处理
-      if (statsData.pendingAssignments) {
-        // 处理待完成作业
-        pendingAssignments.value = statsData.pendingAssignments.map(item => processAssignmentData(item))
-        console.log('待完成作业:', pendingAssignments.value)
-      } else {
-        pendingAssignments.value = []
-      }
-      
-      // 如果有已提交和已批改的作业数据，也处理它们
-      if (Array.isArray(statsData.submittedAssignments)) {
-        const submittedData = statsData.submittedAssignments.map(item => processAssignmentData(item))
-        if (Array.isArray(statsData.gradedAssignments)) {
-          const gradedData = statsData.gradedAssignments.map(item => processAssignmentData(item))
-          completedAssignments.value = [...submittedData, ...gradedData]
-        } else {
-          completedAssignments.value = submittedData
-        }
-      } else {
-        // 如果没有明确的已提交和已批改区分，则可能所有非待完成的都是已完成的
-        const allAssignments = Array.isArray(statsData.assignments) ? statsData.assignments : []
-        completedAssignments.value = allAssignments
-          .filter(a => a.status !== 'PENDING')
-          .map(item => processAssignmentData(item))
-      }
-      
-      console.log('已完成作业:', completedAssignments.value)
-      
-      // 更新统计数据
-      if (statsData.pendingCount !== undefined) {
-        console.log(`待完成: ${statsData.pendingCount}, 已提交: ${statsData.submittedCount}, 已批改: ${statsData.gradedCount}, 总计: ${statsData.totalCount}`)
-      }
+    if (pendingResponse && pendingResponse.code === 200 && pendingResponse.data) {
+      pendingAssignments.value = Array.isArray(pendingResponse.data) 
+        ? pendingResponse.data.map(item => processAssignmentData(item))
+        : []
+      console.log('待完成作业:', pendingAssignments.value)
     } else {
-      console.error('返回数据格式不正确:', response.data)
-      ElMessage.error('获取作业列表失败：数据格式不正确')
+      pendingAssignments.value = []
+      console.warn('获取待完成作业失败或返回数据为空:', pendingResponse)
     }
+    
+    // 获取已完成作业
+    const completedResponse = await assignmentApi.getCompletedAssignments()
+    console.log('已完成作业响应:', completedResponse)
+    
+    if (completedResponse && completedResponse.code === 200 && completedResponse.data) {
+      completedAssignments.value = Array.isArray(completedResponse.data)
+        ? completedResponse.data.map(item => processAssignmentData(item))
+        : []
+      console.log('已完成作业:', completedAssignments.value)
+    } else {
+      completedAssignments.value = []
+      console.warn('获取已完成作业失败或返回数据为空:', completedResponse)
+    }
+    
   } catch (error) {
     console.error('获取作业列表失败:', error)
     ElMessage.error(`获取作业列表失败: ${error.message || '未知错误'}`)

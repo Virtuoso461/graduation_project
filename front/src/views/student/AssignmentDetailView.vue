@@ -232,8 +232,7 @@ import {
   ArrowLeft, Timer, Document, InfoFilled, 
   VideoPlay, Link 
 } from '@element-plus/icons-vue'
-// 后续可引入API
-// import { assignmentApi } from '@/utils/http/api'
+import { assignmentApi } from '@/utils/http/api'
 
 interface GradingCriteria {
   criteria: string;
@@ -397,115 +396,24 @@ const getRefActionText = (type: string): string => {
   }
 }
 
-// 加载作业详情
-const loadAssignmentDetail = async () => {
+// 获取作业详情
+const fetchAssignmentDetail = async () => {
   try {
-    isLoading.value = true
+    setLoading(true)
+    const response = await assignmentApi.getAssignmentDetail(assignmentId.value)
     
-    // 模拟加载延迟
-    await new Promise(resolve => setTimeout(resolve, 800))
-    
-    // 后续使用API请求数据
-    // const response = await assignmentApi.getAssignmentDetail(assignmentId.value)
-    // assignment.value = response
-    
-    // 模拟作业数据
-    assignment.value = {
-      id: assignmentId.value,
-      title: '二叉树遍历算法实现',
-      courseId: '1',
-      courseName: '数据结构与算法',
-      teacherName: '王教授',
-      description: '本次作业要求实现二叉树的前序、中序和后序遍历算法，并分析各种遍历算法的时间复杂度和空间复杂度。通过本次作业，同学们将深入理解二叉树的基本操作和遍历方式，为后续学习高级数据结构和算法打下基础。',
-      status: 'notStarted',
-      publishTime: '2024-04-01',
-      deadline: '2024-04-15 23:59',
-      difficulty: 4,
-      estimatedTime: 120,
-      questionCount: 3,
-      totalPoints: 100,
-      requirements: [
-        {
-          title: '算法实现',
-          content: '使用C/C++/Java/Python等编程语言实现以下二叉树遍历算法:',
-          items: [
-            '前序遍历（递归方式和非递归方式）',
-            '中序遍历（递归方式和非递归方式）',
-            '后序遍历（递归方式和非递归方式）',
-            '层序遍历'
-          ]
-        },
-        {
-          title: '复杂度分析',
-          content: '对每种遍历算法进行时间复杂度和空间复杂度分析，并比较递归实现和非递归实现的差异。',
-          items: []
-        },
-        {
-          title: '测试用例',
-          content: '设计至少3个测试用例，包括特殊情况（如空树、单节点树、满二叉树等），验证算法的正确性。',
-          items: []
-        }
-      ],
-      submissionTypes: [
-        '源代码文件（.c/.cpp/.java/.py等）',
-        '算法分析报告（PDF格式）',
-        '测试结果截图'
-      ],
-      formatRequirements: [
-        '所有源代码文件需包含必要的注释，说明函数功能、参数和返回值。',
-        '分析报告应包含算法原理、实现思路、复杂度分析和测试结果。',
-        '报告要求字数不少于800字，格式规范，图表清晰。',
-        '所有文件打包为一个zip文件提交，命名格式为"学号_姓名_二叉树遍历"。'
-      ],
-      gradingCriteria: [
-        {
-          criteria: '算法实现正确性',
-          percentage: 40,
-          description: '所有遍历算法功能正确，能处理各种情况'
-        },
-        {
-          criteria: '代码质量',
-          percentage: 20,
-          description: '代码结构清晰，注释完善，命名规范'
-        },
-        {
-          criteria: '复杂度分析',
-          percentage: 25,
-          description: '正确分析时间和空间复杂度，论证合理'
-        },
-        {
-          criteria: '测试用例设计',
-          percentage: 15,
-          description: '测试用例覆盖全面，包含边界情况'
-        }
-      ],
-      references: [
-        {
-          type: 'pdf',
-          title: '二叉树基础知识讲义',
-          description: '包含二叉树的基本概念和遍历算法原理',
-          url: 'https://example.com/binary_tree_basics.pdf'
-        },
-        {
-          type: 'video',
-          title: '二叉树遍历算法演示',
-          description: '通过动画演示各种遍历算法的执行过程',
-          url: 'https://example.com/binary_tree_traversal_demo'
-        },
-        {
-          type: 'link',
-          title: '二叉树遍历的应用',
-          description: '介绍二叉树遍历在实际问题中的应用',
-          url: 'https://example.com/binary_tree_applications'
-        }
-      ],
-      isSubmitted: false
+    if (response && response.code === 200 && response.data) {
+      assignment.value = response.data
+      console.log('获取作业详情成功:', assignment.value)
+    } else {
+      ElMessage.error('获取作业详情失败')
+      console.error('获取作业详情失败:', response)
     }
   } catch (error) {
-    console.error('加载作业详情失败:', error)
-    ElMessage.error('加载作业详情失败，请稍后重试')
+    ElMessage.error(`获取作业详情失败: ${error.message || '未知错误'}`)
+    console.error('获取作业详情出错:', error)
   } finally {
-    isLoading.value = false
+    setLoading(false)
   }
 }
 
@@ -548,7 +456,7 @@ const goBack = () => {
 
 // 生命周期钩子
 onMounted(() => {
-  loadAssignmentDetail()
+  fetchAssignmentDetail()
 })
 </script>
 

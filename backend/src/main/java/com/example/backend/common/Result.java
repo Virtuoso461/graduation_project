@@ -133,6 +133,18 @@ public class Result<T> implements Serializable {
     }
     
     /**
+     * 错误返回结果
+     *
+     * @param <T> 返回数据类型
+     * @param code 错误码
+     * @param message 错误信息
+     * @return 错误结果
+     */
+    public static <T> Result<T> error(Integer code, String message) {
+        return new Result<>(code, message, null, false);
+    }
+    
+    /**
      * 参数验证失败返回结果
      *
      * @param <T> 返回数据类型
@@ -214,6 +226,17 @@ public class Result<T> implements Serializable {
      */
     public static <T> Result<T> notFound(String message) {
         return new Result<>(ResultCode.NOT_FOUND.getCode(), message, null, false);
+    }
+    
+    /**
+     * 失败返回结果（别名方法）
+     *
+     * @param <T> 返回数据类型
+     * @param message 错误信息
+     * @return 失败结果
+     */
+    public static <T> Result<T> fail(String message) {
+        return failed(message);
     }
     
     // Getters and Setters

@@ -379,39 +379,47 @@ const fetchProfile = async () => {
 }
 
 // 头像上传相关方法
-const handleAvatarSuccess = (response: ApiResponse<{url: string}>) => {
-  if (response.code === 200 && response.data) {
-    // 更新表单数据中的头像地址
-    profileData.avatar = response.data.url;
+const handleAvatarSuccess = async (response: any) => {
+  try {
+    // 上传头像到服务器
+    const uploadResult = await profileApi.uploadAvatar(response.raw) as any;
+    
+    if (uploadResult && uploadResult.code === 200 && uploadResult.data) {
+      // 更新表单数据中的头像地址
+      profileData.avatar = uploadResult.data.url || uploadResult.data;
 
-    // 同时更新到user store，确保界面立即刷新
-    userStore.updateUserInfo({
-      avatar: response.data.url
-    });
+      // 同时更新到user store，确保界面立即刷新
+      userStore.updateUserInfo({
+        avatar: profileData.avatar
+      });
 
-    // 提示上传成功
-    ElMessage.success('头像上传成功');
+      // 提示上传成功
+      ElMessage.success('头像上传成功');
 
-    // 异步更新到IndexedDB
-    try {
-      const userId = localStorage.getItem('currentUserId');
-      if (userId) {
-        getCurrentUserInfo().then(userInfoFromDB => {
-          if (userInfoFromDB) {
-            const updatedUserInfo = {
-              ...userInfoFromDB,
-              avatar: response.data.url
-            };
-            saveUserInfo(updatedUserInfo).then(() => {
-              console.log('头像已保存到IndexedDB');
-            });
-          }
-        });
+      // 异步更新到IndexedDB
+      try {
+        const userId = localStorage.getItem('currentUserId');
+        if (userId) {
+          getCurrentUserInfo().then(userInfoFromDB => {
+            if (userInfoFromDB) {
+              const updatedUserInfo = {
+                ...userInfoFromDB,
+                avatar: profileData.avatar
+              };
+              saveUserInfo(updatedUserInfo).then(() => {
+                console.log('头像已保存到IndexedDB');
+              });
+            }
+          });
+        }
+      } catch (error) {
+        console.error('保存头像到IndexedDB失败:', error);
       }
-    } catch (error) {
-      console.error('保存头像到IndexedDB失败:', error);
+    } else {
+      ElMessage.error(uploadResult?.message || '头像上传失败');
     }
-  } else {
+  } catch (error) {
+    console.error('头像上传处理失败:', error);
     ElMessage.error('头像上传失败');
   }
 }
@@ -480,18 +488,45 @@ const handleSave = async () => {
 
 // 安全设置相关方法
 const handleChangePassword = () => {
-  ElMessageBox.prompt('请输入新密码', '修改密码', {
-    confirmButtonText: '确认',
+  ElMessageBox.prompt('请输入当前密码', '修改密码', {
+    confirmButtonText: '下一步',
     cancelButtonText: '取消',
     inputType: 'password',
     inputValidator: (value) => {
       return value.length >= 6 || '密码长度不能小于6位'
     }
-  }).then(({ value }) => {
-    ElMessage.success('密码修改成功')
+  }).then(({ value: oldPassword }) => {
+    // 输入新密码
+    ElMessageBox.prompt('请输入新密码', '修改密码', {
+      confirmButtonText: '确认',
+      cancelButtonText: '取消',
+      inputType: 'password',
+      inputValidator: (value) => {
+        return value.length >= 6 || '密码长度不能小于6位'
+      }
+    }).then(async ({ value: newPassword }) => {
+      try {
+        loading.value = true;
+        // 调用修改密码API
+        const result = await profileApi.changePassword(oldPassword, newPassword) as any;
+        
+        if (result && result.code === 200) {
+          ElMessage.success('密码修改成功');
+        } else {
+          ElMessage.error(result?.message || '密码修改失败');
+        }
+      } catch (error) {
+        console.error('修改密码失败:', error);
+        ElMessage.error('密码修改失败');
+      } finally {
+        loading.value = false;
+      }
+    }).catch(() => {
+      // 取消操作
+    });
   }).catch(() => {
     // 取消操作
-  })
+  });
 }
 
 const handleChangePhone = () => {

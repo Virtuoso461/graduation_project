@@ -367,21 +367,21 @@ const router = createRouter({
 // 路由守卫
 router.beforeEach((to, from, next) => {
   console.log(`路由跳转: 从 ${from.fullPath} 到 ${to.fullPath}`)
-  
+
   const userStore = useUserStore()
   console.log('当前用户登录状态:', userStore.isLoggedIn)
   console.log('当前用户信息:', userStore.userInfo)
-  
+
   // 设置页面标题
   document.title = `${to.meta.title} - 智能学习平台`
-  
+
   // 检查是否需要认证 - 只检查requiresAuth
   if (to.meta.requiresAuth && !userStore.isLoggedIn) {
     console.log('需要认证但用户未登录，重定向到登录页面')
     next({ name: 'login', query: { redirect: to.fullPath } })
     return
   }
-  
+
   // 检查角色权限
   if (to.meta.role && userStore.userInfo && userStore.userInfo.role !== to.meta.role) {
     console.log('用户角色不匹配，重定向到404页面')
@@ -389,7 +389,7 @@ router.beforeEach((to, from, next) => {
     next({ name: 'not-found' })
     return
   }
-  
+
   console.log('路由检查通过，继续导航')
   next()
 })

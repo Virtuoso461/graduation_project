@@ -47,6 +47,19 @@ public class CourseEnrollment {
     @Temporal(TemporalType.TIMESTAMP)
     private Date lastAccessTime;
     
+    /**
+     * 记录创建时间
+     */
+    @Column(name = "created_at")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date createdAt;
+    
+    /**
+     * 总学习时间（分钟）
+     */
+    @Column(name = "total_study_time")
+    private Integer totalStudyTime = 0;
+    
     // 构造函数
     public CourseEnrollment() {
     }
@@ -138,5 +151,21 @@ public class CourseEnrollment {
 
     public void setLastAccessTime(Date lastAccessTime) {
         this.lastAccessTime = lastAccessTime;
+    }
+    
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
+    }
+    
+    public Integer getTotalStudyTime() {
+        return totalStudyTime;
+    }
+
+    public void setTotalStudyTime(Integer totalStudyTime) {
+        this.totalStudyTime = totalStudyTime;
     }
 } 

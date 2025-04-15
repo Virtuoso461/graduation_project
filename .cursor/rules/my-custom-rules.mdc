@@ -22,8 +22,6 @@ alwaysApply: true
 
 类型定义必须使用TypeScript
 
-组件目录：src/components/下按功能模块划分
-
 状态管理：
 必须使用Pinia
 类型化的store定义
@@ -53,19 +51,6 @@ API规范：
  单元测试：Vitest
  E2E测试：Cypress
 
-后端：
- 单元测试：JUnit5 + Mockito
- 集成测试：Testcontainers
-
-扩展规则
-
-允许扩展的场景：
-
-前端可视化：ECharts
-
-后端安全：Spring Security 6+
-
-文档：Swagger/OpenAPI3
 
 禁止扩展的场景：
  前端不得引入Vue2技术栈

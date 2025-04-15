@@ -1,3 +1,5 @@
+package com.example.backend.dto;
+
 import com.example.backend.entity.Role;
 
 import jakarta.validation.constraints.*;

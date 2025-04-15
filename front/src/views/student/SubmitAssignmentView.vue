@@ -278,8 +278,7 @@ import {
   ArrowLeft, InfoFilled, Upload, 
   Loading, Document, Edit
 } from '@element-plus/icons-vue'
-// 后续可引入API
-// import { assignmentApi } from '@/utils/http/api'
+import { assignmentApi } from '@/utils/http/api'
 
 interface TextQuestion {
   title: string;
@@ -436,131 +435,37 @@ const isAllComplete = computed(() => {
   return completionPercentage.value === 100
 })
 
-// 加载作业详情
-const loadAssignmentDetail = async () => {
+// 获取作业详情
+const fetchAssignmentDetail = async () => {
   try {
     isLoading.value = true
+    const response = await assignmentApi.getAssignmentDetail(assignmentId.value)
     
-    // 模拟加载延迟
-    await new Promise(resolve => setTimeout(resolve, 800))
-    
-    // 后续使用API请求数据
-    // const response = await assignmentApi.getAssignmentForSubmission(assignmentId.value)
-    // assignment.value = response
-    
-    // 模拟作业数据
-    assignment.value = {
-      id: assignmentId.value,
-      title: '二叉树遍历算法实现',
-      courseId: '1',
-      courseName: '数据结构与算法',
-      description: '本次作业要求实现二叉树的前序、中序和后序遍历算法，并分析各种遍历算法的时间复杂度和空间复杂度。',
-      deadline: new Date(new Date().getTime() + 3 * 24 * 60 * 60 * 1000).toLocaleString(),
-      requirements: [
-        {
-          title: '算法实现',
-          content: '使用C/C++/Java/Python等编程语言实现以下二叉树遍历算法:',
-          items: [
-            '前序遍历（递归方式和非递归方式）',
-            '中序遍历（递归方式和非递归方式）',
-            '后序遍历（递归方式和非递归方式）',
-            '层序遍历'
-          ]
-        },
-        {
-          title: '复杂度分析',
-          content: '对每种遍历算法进行时间复杂度和空间复杂度分析，并比较递归实现和非递归实现的差异。',
-          items: []
-        }
-      ],
-      formatRequirements: [
-        '所有源代码文件需包含必要的注释，说明函数功能、参数和返回值。',
-        '分析报告应包含算法原理、实现思路、复杂度分析和测试结果。',
-        '所有文件打包为一个zip文件提交，命名格式为"学号_姓名_二叉树遍历"。'
-      ],
-      textQuestions: [
-        {
-          title: '1. 请简要描述二叉树的三种遍历方式的区别和应用场景',
-          type: 'long',
-          required: true,
-          tips: '可以结合具体的应用场景，例如表达式树的求值等'
-        },
-        {
-          title: '2. 分析递归与非递归实现在空间复杂度上的差异',
-          type: 'long',
-          required: true
-        }
-      ],
-      fileRequirements: [
-        {
-          name: '源代码文件',
-          description: '上传包含遍历算法实现的源代码文件（.c/.cpp/.java/.py）',
-          accept: '.c,.cpp,.java,.py',
-          limit: 5,
-          required: true
-        },
-        {
-          name: '算法分析报告',
-          description: '上传分析报告PDF文件',
-          accept: '.pdf',
-          limit: 1,
-          required: true
-        },
-        {
-          name: '测试结果截图',
-          description: '上传测试结果的截图',
-          accept: '.png,.jpg,.jpeg',
-          limit: 3,
-          required: false
-        }
-      ],
-      codeQuestions: [
-        {
-          title: '3. 实现二叉树的前序遍历（递归方式）',
-          language: 'Java',
-          description: '完成下面的代码，实现二叉树的前序遍历',
-          template: `public void preOrderTraversal(TreeNode root) {
-  // 在此处实现前序遍历算法
-  
-}`,
-          hasTemplate: true
-        },
-        {
-          title: '4. 实现二叉树的层序遍历',
-          language: 'Java',
-          description: '使用队列实现二叉树的层序遍历',
-          hasTemplate: false
-        }
-      ]
+    if (response && response.code === 200 && response.data) {
+      assignment.value = response.data
+      console.log('获取作业详情成功:', assignment.value)
+      
+      // 初始化表单内容
+      if (assignment.value.questionItems) {
+        assignment.value.questionItems.forEach((item) => {
+          if (item.type === 'text') {
+            submissionData.textAnswers[item.id] = ''
+          } else if (item.type === 'choice') {
+            submissionData.textAnswers[item.id] = ''
+          } else if (item.type === 'multiChoice') {
+            submissionData.textAnswers[item.id] = []
+          }
+        })
+      }
+    } else {
+      ElMessage.error('获取作业详情失败')
+      console.error('获取作业详情失败:', response)
     }
-    
-    // 初始化提交数据结构
-    initSubmissionData()
-    
-    // 加载草稿（如果有）
-    loadDraft()
-    
   } catch (error) {
-    console.error('加载作业详情失败:', error)
-    ElMessage.error('加载作业详情失败，请稍后重试')
+    ElMessage.error(`获取作业详情失败: ${error.message || '未知错误'}`)
+    console.error('获取作业详情出错:', error)
   } finally {
     isLoading.value = false
-  }
-}
-
-// 初始化提交数据结构
-const initSubmissionData = () => {
-  // 初始化文本答案数组
-  submissionData.textAnswers = new Array(assignment.value.textQuestions.length).fill('')
-  
-  // 初始化文件上传数组
-  submissionData.fileUploads = new Array(assignment.value.fileRequirements.length).fill([])
-  
-  // 初始化代码答案数组
-  if (assignment.value.codeQuestions) {
-    submissionData.codeAnswers = assignment.value.codeQuestions.map(q => q.template || '')
-  } else {
-    submissionData.codeAnswers = []
   }
 }
 
@@ -633,8 +538,44 @@ const resetCodeTemplate = (index: number) => {
 }
 
 // 提交作业
-const submitAssignment = () => {
-  showSubmitConfirmation.value = true
+const submitAssignment = async () => {
+  try {
+    if (isSubmitting.value) return
+    isSubmitting.value = true
+
+    // 构建提交数据
+    const submissionData = {
+      assignmentId: assignmentId.value,
+      answers: submissionData.textAnswers,
+      attachments: submissionData.fileUploads.map(files => files.map(file => ({
+        fileId: file.fileId || '',
+        fileName: file.name || '',
+        fileUrl: file.url || '',
+        fileType: file.type || ''
+      })).filter(file => file.fileId || file.fileName || file.fileUrl || file.fileType)),
+      submitTime: new Date().toISOString(),
+      comments: submissionData.comments
+    }
+
+    console.log('提交作业数据:', submissionData)
+    
+    // 调用提交API
+    const response = await assignmentApi.submitAssignment(submissionData)
+    
+    if (response && response.code === 200) {
+      ElMessage.success('作业提交成功')
+      setTimeout(() => {
+        router.push(`/assignments/${assignmentId.value}/feedback`)
+      }, 1000)
+    } else {
+      ElMessage.error(response?.message || '作业提交失败')
+    }
+  } catch (error) {
+    console.error('提交作业出错:', error)
+    ElMessage.error(`提交作业失败: ${error.message || '未知错误'}`)
+  } finally {
+    isSubmitting.value = false
+  }
 }
 
 // 确认提交
@@ -701,7 +642,7 @@ const startChangeTracking = () => {
 
 // 生命周期钩子
 onMounted(() => {
-  loadAssignmentDetail()
+  fetchAssignmentDetail()
   startChangeTracking()
 })
 
