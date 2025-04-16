@@ -26,12 +26,12 @@ import java.util.Arrays;
 public class SecurityConfig {
 
     private final UserService userService;
-    
+
     @Autowired
     public SecurityConfig(UserService userService) {
         this.userService = userService;
     }
-    
+
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter(JwtUtil jwtUtil) {
         return new JwtAuthenticationFilter(userService, jwtUtil);
@@ -53,6 +53,10 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // 允许公共接口无需认证
                 .requestMatchers("/api/auth/**").permitAll()
+                // 允许Swagger UI和OpenAPI文档无需认证
+                .requestMatchers("/swagger-ui.html").permitAll()
+                .requestMatchers("/swagger-ui/**").permitAll()
+                .requestMatchers("/v3/api-docs/**").permitAll()
                 // 其他请求需要认证
                 .anyRequest().authenticated()
             )

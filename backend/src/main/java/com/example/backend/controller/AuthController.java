@@ -11,6 +11,13 @@ import com.example.backend.service.TeacherProfileService;
 import com.example.backend.service.UserService;
 import com.example.backend.util.JwtUtil;
 import com.example.backend.vo.LoginVO;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -28,6 +35,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "认证管理", description = "提供用户认证相关的API，包括登录、注册、登出、刷新令牌和密码重置等功能")
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
@@ -54,6 +62,13 @@ public class AuthController {
      * @param loginDTO 登录信息DTO
      * @return 登录成功返回用户信息和token，失败返回错误信息
      */
+    @Operation(summary = "用户登录", description = "统一的登录接口，根据用户角色进行不同的处理，返回用户信息和JWT令牌")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "登录成功"),
+        @ApiResponse(responseCode = "401", description = "用户名或密码错误"),
+        @ApiResponse(responseCode = "403", description = "角色不匹配"),
+        @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
     @PostMapping("/login")
     public Result<Map<String, Object>> login(@RequestBody LoginDTO loginDTO) {
         try {
@@ -120,6 +135,12 @@ public class AuthController {
      * @param registerDTO 注册信息DTO
      * @return 注册结果
      */
+    @Operation(summary = "学生注册", description = "创建新的学生账号，并初始化学生个人资料")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "注册成功"),
+        @ApiResponse(responseCode = "400", description = "用户名已存在或输入数据无效"),
+        @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
     @PostMapping("/student/register")
     public Result<String> studentRegister(@RequestBody RegisterDTO registerDTO) {
         // 检查用户名是否已存在
@@ -149,6 +170,12 @@ public class AuthController {
      * @param registerDTO 注册信息DTO
      * @return 注册结果
      */
+    @Operation(summary = "教师注册", description = "创建新的教师账号，并初始化教师个人资料")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "注册成功"),
+        @ApiResponse(responseCode = "400", description = "用户名已存在或输入数据无效"),
+        @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
     @PostMapping("/teacher/register")
     public Result<String> teacherRegister(@RequestBody RegisterDTO registerDTO) {
         // 检查用户名是否已存在
@@ -177,6 +204,10 @@ public class AuthController {
      *
      * @return 登出结果
      */
+    @Operation(summary = "用户登出", description = "处理用户登出请求，客户端应删除本地保存的令牌")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "登出成功")
+    })
     @PostMapping("/logout")
     public Result<String> logout() {
         // JWT是无状态的，客户端只需要删除令牌即可
@@ -190,6 +221,12 @@ public class AuthController {
      * @param request 请求，包含旧令牌
      * @return 新令牌
      */
+    @Operation(summary = "刷新令牌", description = "根据旧令牌生成新的JWT令牌，用于延长用户会话")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "令牌刷新成功"),
+        @ApiResponse(responseCode = "400", description = "令牌不能为空"),
+        @ApiResponse(responseCode = "401", description = "无效的令牌")
+    })
     @PostMapping("/refresh-token")
     public Result<Map<String, String>> refreshToken(@RequestBody Map<String, String> request) {
         String token = request.get("token");
@@ -220,6 +257,12 @@ public class AuthController {
      * @param request 请求，包含邮箱
      * @return 发送结果
      */
+    @Operation(summary = "密码重置请求", description = "发送密码重置验证码到用户邮箱")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "验证码发送成功"),
+        @ApiResponse(responseCode = "400", description = "邮箱不能为空或无效"),
+        @ApiResponse(responseCode = "404", description = "用户不存在")
+    })
     @PostMapping("/password-reset")
     public Result<String> passwordResetRequest(@RequestBody Map<String, String> request) {
         String email = request.get("email");
@@ -241,6 +284,12 @@ public class AuthController {
      * @param passwordResetDTO 密码重置DTO
      * @return 重置结果
      */
+    @Operation(summary = "确认密码重置", description = "验证重置码并设置新密码")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "密码重置成功"),
+        @ApiResponse(responseCode = "400", description = "验证码无效或已过期"),
+        @ApiResponse(responseCode = "404", description = "用户不存在")
+    })
     @PostMapping("/password-reset/confirm")
     public Result<String> passwordResetConfirm(@RequestBody PasswordResetDTO passwordResetDTO) {
         String result = userService.resetPassword(

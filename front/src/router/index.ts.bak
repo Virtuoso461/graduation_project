@@ -1,0 +1,763 @@
+import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
+import { useUserStore } from '@/stores/user'
+
+// 布局组件
+import Layout from '@/layout/index.vue'
+
+// 路由配置
+const routes: Array<RouteRecordRaw> = [
+  {
+    path: '/',
+    redirect: '/login'
+  },
+  {
+    path: '/login',
+    name: 'login',
+    component: () => import('@/views/common/LoginView.vue'),
+    meta: {
+      title: '登录',
+      requiresAuth: false
+    }
+  },
+  {
+    path: '/register',
+    name: 'register',
+    component: () => import('@/views/common/RegisterView.vue'),
+    meta: {
+      title: '注册',
+      requiresAuth: false
+    }
+  },
+  {
+    path: '/forgot-password',
+    name: 'forgot-password',
+    component: () => import('@/views/common/ForgotPasswordView.vue'),
+    meta: {
+      title: '忘记密码',
+      requiresAuth: false
+    }
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'not-found',
+    component: () => import('@/views/common/NotFoundView.vue'),
+    meta: {
+      title: '页面未找到',
+      requiresAuth: false
+    }
+  },
+
+  // 学生模块路由
+  {
+    path: '/student',
+    component: Layout,
+    children: [
+      // 学生仪表盘
+      {
+        path: 'dashboard',
+        name: 'student-dashboard',
+        component: () => import('@/views/student/dashboard/DashboardView.vue'),
+        meta: {
+          title: '学习仪表盘',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      {
+        path: 'dashboard/overview',
+        name: 'student-dashboard-overview',
+        component: () => import('@/views/student/dashboard/LearningOverviewView.vue'),
+        meta: {
+          title: '学习概况',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      {
+        path: 'dashboard/statistics',
+        name: 'student-dashboard-statistics',
+        component: () => import('@/views/student/dashboard/LearningStatisticsView.vue'),
+        meta: {
+          title: '学习统计',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      // 个人资料
+      {
+        path: 'profile',
+        name: 'student-profile',
+        component: () => import('@/views/student/profile/ProfileView.vue'),
+        meta: {
+          title: '个人资料',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      {
+        path: 'profile/edit',
+        name: 'student-profile-edit',
+        component: () => import('@/views/student/profile/ProfileEditView.vue'),
+        meta: {
+          title: '编辑个人资料',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      {
+        path: 'profile/password',
+        name: 'student-change-password',
+        component: () => import('@/views/student/profile/ChangePasswordView.vue'),
+        meta: {
+          title: '修改密码',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      // 作业
+      {
+        path: 'assignments',
+        name: 'student-assignments',
+        component: () => import('@/views/student/assignments/AssignmentsListView.vue'),
+        meta: {
+          title: '作业列表',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      {
+        path: 'assignments/detail/:id',
+        name: 'student-assignment-detail',
+        component: () => import('@/views/student/assignments/AssignmentDetailView.vue'),
+        meta: {
+          title: '作业详情',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      {
+        path: 'assignments/submit/:id',
+        name: 'student-submit-assignment',
+        component: () => import('@/views/student/assignments/SubmitAssignmentView.vue'),
+        meta: {
+          title: '提交作业',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      {
+        path: 'assignments/history',
+        name: 'student-assignment-history',
+        component: () => import('@/views/student/assignments/AssignmentHistoryView.vue'),
+        meta: {
+          title: '作业历史',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      {
+        path: 'assignments/pending',
+        name: 'student-pending-assignments',
+        component: () => import('@/views/student/assignments/PendingAssignmentsView.vue'),
+        meta: {
+          title: '待完成作业',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      // 考试
+      {
+        path: 'exams',
+        name: 'student-exams',
+        component: () => import('@/views/student/exams/ExamsListView.vue'),
+        meta: {
+          title: '考试列表',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      {
+        path: 'exams/detail/:id',
+        name: 'student-exam-detail',
+        component: () => import('@/views/student/exams/ExamDetailView.vue'),
+        meta: {
+          title: '考试详情',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      {
+        path: 'exams/take/:id',
+        name: 'student-take-exam',
+        component: () => import('@/views/student/exams/TakeExamView.vue'),
+        meta: {
+          title: '参加考试',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      {
+        path: 'exams/result/:id',
+        name: 'student-exam-result',
+        component: () => import('@/views/student/exams/ExamResultView.vue'),
+        meta: {
+          title: '考试结果',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      {
+        path: 'exams/history',
+        name: 'student-exam-history',
+        component: () => import('@/views/student/exams/ExamHistoryView.vue'),
+        meta: {
+          title: '考试历史',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      {
+        path: 'exams/wrong-questions',
+        name: 'student-wrong-questions',
+        component: () => import('@/views/student/exams/WrongQuestionsView.vue'),
+        meta: {
+          title: '错题集',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      {
+        path: 'exams/knowledge-points',
+        name: 'student-knowledge-points',
+        component: () => import('@/views/student/exams/KnowledgePointsView.vue'),
+        meta: {
+          title: '知识点掌握情况',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      // 社区
+      {
+        path: 'community',
+        name: 'student-community',
+        component: () => import('@/views/student/community/CommunityHomeView.vue'),
+        meta: {
+          title: '社区首页',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      {
+        path: 'community/posts',
+        name: 'student-posts-list',
+        component: () => import('@/views/student/community/PostsListView.vue'),
+        meta: {
+          title: '帖子列表',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      {
+        path: 'community/post/:id',
+        name: 'student-post-detail',
+        component: () => import('@/views/student/community/PostDetailView.vue'),
+        meta: {
+          title: '帖子详情',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      {
+        path: 'community/post/create',
+        name: 'student-create-post',
+        component: () => import('@/views/student/community/CreatePostView.vue'),
+        meta: {
+          title: '创建帖子',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      {
+        path: 'community/post/edit/:id',
+        name: 'student-edit-post',
+        component: () => import('@/views/student/community/EditPostView.vue'),
+        meta: {
+          title: '编辑帖子',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      {
+        path: 'community/my-posts',
+        name: 'student-my-posts',
+        component: () => import('@/views/student/community/MyPostsView.vue'),
+        meta: {
+          title: '我的帖子',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      {
+        path: 'community/my-replies',
+        name: 'student-my-replies',
+        component: () => import('@/views/student/community/MyRepliesView.vue'),
+        meta: {
+          title: '我的回复',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      // 资源
+      {
+        path: 'resources',
+        name: 'student-resources',
+        component: () => import('@/views/student/resources/ResourcesListView.vue'),
+        meta: {
+          title: '资源列表',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      {
+        path: 'resources/detail/:id',
+        name: 'student-resource-detail',
+        component: () => import('@/views/student/resources/ResourceDetailView.vue'),
+        meta: {
+          title: '资源详情',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      {
+        path: 'resources/collections',
+        name: 'student-my-collections',
+        component: () => import('@/views/student/resources/MyCollectionsView.vue'),
+        meta: {
+          title: '我的收藏',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      {
+        path: 'resources/folders',
+        name: 'student-collection-folders',
+        component: () => import('@/views/student/resources/CollectionFoldersView.vue'),
+        meta: {
+          title: '收藏夹管理',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      // 课程
+      {
+        path: 'courses/available',
+        name: 'student-available-courses',
+        component: () => import('@/views/student/courses/AvailableCoursesView.vue'),
+        meta: {
+          title: '可选课程',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      {
+        path: 'courses',
+        name: 'student-enrolled-courses',
+        component: () => import('@/views/student/courses/EnrolledCoursesView.vue'),
+        meta: {
+          title: '已选课程',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      {
+        path: 'courses/detail/:id',
+        name: 'student-course-detail',
+        component: () => import('@/views/student/courses/CourseDetailView.vue'),
+        meta: {
+          title: '课程详情',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      {
+        path: 'courses/chapter/:courseId/:chapterId',
+        name: 'student-course-chapter',
+        component: () => import('@/views/student/courses/CourseChapterView.vue'),
+        meta: {
+          title: '课程章节学习',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      {
+        path: 'courses/progress/:id',
+        name: 'student-course-progress',
+        component: () => import('@/views/student/courses/CourseProgressView.vue'),
+        meta: {
+          title: '学习进度',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      {
+        path: 'courses/transcript/:id',
+        name: 'student-course-transcript',
+        component: () => import('@/views/student/courses/CourseTranscriptView.vue'),
+        meta: {
+          title: '课程成绩单',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      // AI学习助手
+      {
+        path: 'ai-assistant',
+        name: 'student-ai-assistant',
+        component: () => import('@/views/student/ai-guidance/AIAssistantView.vue'),
+        meta: {
+          title: 'AI学习助手',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      },
+      {
+        path: 'ai-assistant/history',
+        name: 'student-ai-history',
+        component: () => import('@/views/student/ai-guidance/HistoryQuestionsView.vue'),
+        meta: {
+          title: '历史问答记录',
+          requiresAuth: true,
+          role: 'STUDENT'
+        }
+      }
+    ]
+  },
+  
+  // 为了兼容原来的路由，添加重定向
+  {
+    path: '/dashboard',
+    redirect: '/student/dashboard'
+  },
+  {
+    path: '/profile',
+    redirect: '/student/profile'
+  },
+  {
+    path: '/courses',
+    redirect: '/student/courses'
+  },
+  {
+    path: '/exams',
+    redirect: '/student/exams'
+  },
+  {
+    path: '/assignments',
+    redirect: '/student/assignments'
+  },
+
+  // 教师模块路由
+  {
+    path: '/teacher',
+    component: Layout,
+    children: [
+      // 教师仪表盘
+      {
+        path: 'dashboard',
+        name: 'teacher-dashboard',
+        component: () => import('@/views/teacher/dashboard/DashboardView.vue'),
+        meta: {
+          title: '教学仪表盘',
+          requiresAuth: true,
+          role: 'TEACHER'
+        }
+      },
+      // 个人资料
+      {
+        path: 'profile',
+        name: 'teacher-profile',
+        component: () => import('@/views/teacher/profile/ProfileView.vue'),
+        meta: {
+          title: '个人资料',
+          requiresAuth: true,
+          role: 'TEACHER'
+        }
+      },
+      {
+        path: 'profile/edit',
+        name: 'teacher-profile-edit',
+        component: () => import('@/views/teacher/profile/ProfileEditView.vue'),
+        meta: {
+          title: '编辑个人资料',
+          requiresAuth: true,
+          role: 'TEACHER'
+        }
+      },
+      {
+        path: 'profile/password',
+        name: 'teacher-change-password',
+        component: () => import('@/views/teacher/profile/ChangePasswordView.vue'),
+        meta: {
+          title: '修改密码',
+          requiresAuth: true,
+          role: 'TEACHER'
+        }
+      },
+      // 课程管理
+      {
+        path: 'courses',
+        name: 'teacher-courses',
+        component: () => import('@/views/teacher/courses/CoursesManageView.vue'),
+        meta: {
+          title: '课程管理',
+          requiresAuth: true,
+          role: 'TEACHER'
+        }
+      },
+      {
+        path: 'courses/create',
+        name: 'teacher-course-create',
+        component: () => import('@/views/teacher/courses/CourseCreateView.vue'),
+        meta: {
+          title: '创建课程',
+          requiresAuth: true,
+          role: 'TEACHER'
+        }
+      },
+      {
+        path: 'courses/edit/:id',
+        name: 'teacher-course-edit',
+        component: () => import('@/views/teacher/courses/CoursesManageView.vue'),
+        meta: {
+          title: '编辑课程',
+          requiresAuth: true,
+          role: 'TEACHER'
+        }
+      },
+      {
+        path: 'courses/detail/:id',
+        name: 'teacher-course-detail',
+        component: () => import('@/views/teacher/courses/CoursesManageView.vue'),
+        meta: {
+          title: '课程详情',
+          requiresAuth: true,
+          role: 'TEACHER'
+        }
+      },
+      {
+        path: 'courses/chapters/:id',
+        name: 'teacher-chapters-manage',
+        component: () => import('@/views/teacher/courses/CoursesManageView.vue'),
+        meta: {
+          title: '章节管理',
+          requiresAuth: true,
+          role: 'TEACHER'
+        }
+      },
+      {
+        path: 'courses/sections/:chapterId',
+        name: 'teacher-sections-manage',
+        component: () => import('@/views/teacher/courses/CoursesManageView.vue'),
+        meta: {
+          title: '小节管理',
+          requiresAuth: true,
+          role: 'TEACHER'
+        }
+      },
+      {
+        path: 'courses/statistics/:id',
+        name: 'teacher-course-statistics',
+        component: () => import('@/views/teacher/courses/CoursesManageView.vue'),
+        meta: {
+          title: '课程统计',
+          requiresAuth: true,
+          role: 'TEACHER'
+        }
+      },
+      // 作业管理
+      {
+        path: 'assignments',
+        name: 'teacher-assignments',
+        component: () => import('@/views/teacher/AssignmentsManageView.vue'),
+        meta: {
+          title: '作业管理',
+          requiresAuth: true,
+          role: 'TEACHER'
+        }
+      },
+      {
+        path: 'assignments/create',
+        name: 'teacher-assignment-create',
+        component: () => import('@/views/teacher/AssignmentsManageView.vue'),
+        meta: {
+          title: '创建作业',
+          requiresAuth: true,
+          role: 'TEACHER'
+        }
+      },
+      {
+        path: 'assignments/edit/:id',
+        name: 'teacher-assignment-edit',
+        component: () => import('@/views/teacher/AssignmentsManageView.vue'),
+        meta: {
+          title: '编辑作业',
+          requiresAuth: true,
+          role: 'TEACHER'
+        }
+      },
+      {
+        path: 'assignments/submissions/:id',
+        name: 'teacher-submissions-list',
+        component: () => import('@/views/teacher/AssignmentsManageView.vue'),
+        meta: {
+          title: '提交列表',
+          requiresAuth: true,
+          role: 'TEACHER'
+        }
+      },
+      {
+        path: 'assignments/grade/:submissionId',
+        name: 'teacher-grade-submission',
+        component: () => import('@/views/teacher/AssignmentsManageView.vue'),
+        meta: {
+          title: '批改作业',
+          requiresAuth: true,
+          role: 'TEACHER'
+        }
+      },
+      {
+        path: 'assignments/statistics/:id',
+        name: 'teacher-assignment-statistics',
+        component: () => import('@/views/teacher/AssignmentsManageView.vue'),
+        meta: {
+          title: '作业统计',
+          requiresAuth: true,
+          role: 'TEACHER'
+        }
+      },
+      // 考试管理
+      {
+        path: 'exams',
+        name: 'teacher-exams',
+        component: () => import('@/views/teacher/ExamsManageView.vue'),
+        meta: {
+          title: '考试管理',
+          requiresAuth: true,
+          role: 'TEACHER'
+        }
+      },
+      {
+        path: 'exams/create',
+        name: 'teacher-exam-create',
+        component: () => import('@/views/teacher/ExamsManageView.vue'),
+        meta: {
+          title: '创建考试',
+          requiresAuth: true,
+          role: 'TEACHER'
+        }
+      },
+      {
+        path: 'exams/edit/:id',
+        name: 'teacher-exam-edit',
+        component: () => import('@/views/teacher/ExamsManageView.vue'),
+        meta: {
+          title: '编辑考试',
+          requiresAuth: true,
+          role: 'TEACHER'
+        }
+      },
+      {
+        path: 'exams/submissions/:id',
+        name: 'teacher-exam-submissions',
+        component: () => import('@/views/teacher/ExamsManageView.vue'),
+        meta: {
+          title: '考试提交列表',
+          requiresAuth: true,
+          role: 'TEACHER'
+        }
+      },
+      {
+        path: 'exams/grade/:submissionId',
+        name: 'teacher-grade-exam',
+        component: () => import('@/views/teacher/ExamsManageView.vue'),
+        meta: {
+          title: '批改考试',
+          requiresAuth: true,
+          role: 'TEACHER'
+        }
+      },
+      {
+        path: 'exams/statistics/:id',
+        name: 'teacher-exam-statistics',
+        component: () => import('@/views/teacher/ExamsManageView.vue'),
+        meta: {
+          title: '考试统计',
+          requiresAuth: true,
+          role: 'TEACHER'
+        }
+      },
+      {
+        path: 'exams/ranking/:id',
+        name: 'teacher-exam-ranking',
+        component: () => import('@/views/teacher/ExamsManageView.vue'),
+        meta: {
+          title: '考试排名',
+          requiresAuth: true,
+          role: 'TEACHER'
+        }
+      },
+      // 学生管理
+      {
+        path: 'students',
+        name: 'teacher-students',
+        component: () => import('@/views/teacher/StudentsManageView.vue'),
+        meta: {
+          title: '学生管理',
+          requiresAuth: true,
+          role: 'TEACHER'
+        }
+      },
+      {
+        path: 'students/:id',
+        name: 'teacher-student-detail',
+        component: () => import('@/views/teacher/StudentsManageView.vue'),
+        meta: {
+          title: '学生详情',
+          requiresAuth: true,
+          role: 'TEACHER'
+        }
+      },
+      {
+        path: 'students/course/:courseId',
+        name: 'teacher-course-students',
+        component: () => import('@/views/teacher/StudentsManageView.vue'),
+        meta: {
+          title: '课程学生',
+          requiresAuth: true,
+          role: 'TEACHER'
+        }
+      },
+      {
+        path: 'students/progress/:id',
+        name: 'teacher-student-progress',
+        component: () => import('@/views/teacher/StudentsManageView.vue'),
+        meta: {
+          title: '学生进度',
+          requiresAuth: true,
+          role: 'TEACHER'
+        }
+      },
+      {
+        path: 'students/groups',
+        name: 'teacher-student-groups',
+        component: () => import('@/views/teacher/StudentsManageView.vue'),
+        meta: {
+          title: '学生分组',
+          requiresAuth: true,
+          role: 'TEACHER'
+        }
+      },
+      // 资源管理
+      {
+        path: 'resources',
+        name: 'teacher-resources',
+        component: () => import('@/views/teacher/

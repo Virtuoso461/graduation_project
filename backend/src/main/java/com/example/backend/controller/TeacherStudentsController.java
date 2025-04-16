@@ -301,4 +301,106 @@ public class TeacherStudentsController {
             return Result.failed("获取学生考试成绩失败: " + e.getMessage());
         }
     }
+
+    /**
+     * 创建学生分组
+     *
+     * @param groupData 分组数据
+     * @return 创建的分组
+     */
+    @PostMapping("/groups")
+    public Result<Map<String, Object>> createStudentGroup(@RequestBody Map<String, Object> groupData) {
+        try {
+            Long teacherId = getCurrentTeacherId();
+
+            // 创建学生分组
+            Map<String, Object> createdGroup = studentService.createStudentGroup(teacherId, groupData);
+            return Result.success(createdGroup, "学生分组创建成功");
+        } catch (SecurityException e) {
+            return Result.forbidden(e.getMessage());
+        } catch (Exception e) {
+            return Result.failed("创建学生分组失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取学生分组列表
+     *
+     * @param keyword 搜索关键词
+     * @param page 页码
+     * @param size 每页大小
+     * @return 分组列表
+     */
+    @GetMapping("/groups")
+    public Result<Map<String, Object>> getStudentGroups(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        try {
+            Long teacherId = getCurrentTeacherId();
+
+            // 获取学生分组列表
+            Map<String, Object> groups = studentService.getStudentGroups(teacherId, keyword, page, size);
+            return Result.success(groups);
+        } catch (SecurityException e) {
+            return Result.forbidden(e.getMessage());
+        } catch (Exception e) {
+            return Result.failed("获取学生分组列表失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 更新分组信息
+     *
+     * @param groupId 分组ID
+     * @param groupData 分组数据
+     * @return 更新后的分组
+     */
+    @PutMapping("/groups/{groupId}")
+    public Result<Map<String, Object>> updateStudentGroup(
+            @PathVariable Long groupId,
+            @RequestBody Map<String, Object> groupData) {
+        try {
+            Long teacherId = getCurrentTeacherId();
+
+            // 验证分组是否属于该教师
+            if (!studentService.isTeacherGroup(teacherId, groupId)) {
+                return Result.forbidden("该分组不属于您，无权修改");
+            }
+
+            // 更新分组信息
+            Map<String, Object> updatedGroup = studentService.updateStudentGroup(groupId, groupData);
+            return Result.success(updatedGroup, "分组信息更新成功");
+        } catch (SecurityException e) {
+            return Result.forbidden(e.getMessage());
+        } catch (Exception e) {
+            return Result.failed("更新分组信息失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 删除分组
+     *
+     * @param groupId 分组ID
+     * @return 删除结果
+     */
+    @DeleteMapping("/groups/{groupId}")
+    public Result<Boolean> deleteStudentGroup(@PathVariable Long groupId) {
+        try {
+            Long teacherId = getCurrentTeacherId();
+
+            // 验证分组是否属于该教师
+            if (!studentService.isTeacherGroup(teacherId, groupId)) {
+                return Result.forbidden("该分组不属于您，无权删除");
+            }
+
+            // 删除分组
+            studentService.deleteStudentGroup(groupId);
+            return Result.success(true, "分组删除成功");
+        } catch (SecurityException e) {
+            return Result.forbidden(e.getMessage());
+        } catch (Exception e) {
+            return Result.failed("删除分组失败: " + e.getMessage());
+        }
+    }
 }
